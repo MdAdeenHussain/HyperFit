@@ -180,6 +180,10 @@ def login():
             flash("Invalid email or password")
             return redirect("/login")
 
+        if not user.is_active:
+            flash("Your account has been blocked by admin")
+            return redirect("/login")
+
         # 2️⃣ Password incorrect
         if not check_password_hash(user.password, password):
             flash("Invalid email or password")
@@ -194,9 +198,6 @@ def login():
         login_user(user)
         return redirect("/")
     
-    if not user.is_active:
-        flash("Your account has been blocked by admin")
-        return redirect("/login")
 
     return render_template("auth/login.html")
 
@@ -287,12 +288,6 @@ def add_security_headers(response):
 @app.route("/")
 def home():
     return render_template("home.html")
-if __name__ == "__main__":
-    app.run(debug=True)
-
-@app.route("/test")
-def test():
-    return "Test Page"
 
 # ---------------- NEWSLETTER ROUTE ----------------
 @app.route("/subscribe", methods=["POST"])
@@ -334,38 +329,43 @@ def search():
     )
 
 # ---------------- ADMIN USER ----------------
-with app.app_context():
-    db.create_all()
+def create_admin():
+    with app.app_context():
 
-    if not User.query.filter_by(email="admin@site.com").first():
-        admin = User(
-            name="Admin",
-            email="admin@site.com",
-            phone="9999999999",
-            gender="Other",
-            address="Admin Office",
-            password=generate_password_hash("admin123"),
-            email_verified=True,
-            phone_verified=True,
-            is_admin=True
-        )
-        db.session.add(admin)
-        db.session.commit()
+        if not User.query.filter_by(email="admin@site.com").first():
+            admin = User(
+                name="Admin",
+                email="admin@site.com",
+                phone="9999999999",
+                gender="Other",
+                address="Admin Office",
+                password=generate_password_hash("admin123"),
+                email_verified=True,
+                phone_verified=True,
+                is_admin=True
+            )
+            db.session.add(admin)
+            db.session.commit()
+create_admin()
 
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_admin:
-            return redirect("/login")
+            return redirect("/admin/login")
         return f(*args, **kwargs)
     return decorated
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
         user = User.query.filter_by(email=request.form["email"]).first()
 
         if user and user.is_admin and check_password_hash(user.password, request.form["password"]):
+            logout_user()
             login_user(user)
             return redirect("/admin/dashboard")
 
@@ -383,7 +383,7 @@ def admin_dashboard():
 @admin_required
 def admin_users():
     users = User.query.filter_by(is_admin=False).all()
-    return render_template("admin/users.html", users=users)
+    return render_template("admin/user.html", users=users)
 
 
 @app.route("/admin/toggle-user/<int:user_id>")
@@ -393,3 +393,11 @@ def toggle_user(user_id):
     user.is_active = not user.is_active
     db.session.commit()
     return redirect("/admin/users")
+
+@app.route("/__debug__")
+def debug():
+    return "THIS FILE IS RUNNING"
+
+# ---------------- RUN THE APP ----------------
+if __name__ == "__main__":    #---------------- Always be at the end of the file ----------------
+    app.run(debug=True)

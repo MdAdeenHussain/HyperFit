@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NovaSite — Modern Web Experience</title>
+
+  <!-- =====================
+       GLOBAL STYLES
+  ====================== -->
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --secondary: #22d3ee;
+      --dark: #0f172a;
+      --light: #f8fafc;
+      --muted: #94a3b8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--light);
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+    }
+
+    /* =====================
+       NAVBAR
+    ====================== */
+    header {
+      position: fixed;
+      width: 100%;
+      background: rgba(248, 250, 252, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #e5e7eb;
+      z-index: 1000;
+    }
+
+    .nav {
+      max-width: 1200px;
+      margin: auto;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    /* =====================
+       HERO SECTION
+    ====================== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem 2rem 2rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      text-align: center;
+    }
+
+    .hero-content {
+      max-width: 700px;
+      animation: fadeUp 1s ease forwards;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      opacity: 0.95;
+      margin-bottom: 2rem;
+    }
+
+    .hero button {
+      background: white;
+      color: var(--primary);
+      padding: 0.9rem 2rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hero button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    /* =====================
+       FEATURES
+    ====================== */
+    section {
+      padding: 5rem 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title p {
+      color: var(--muted);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+
+    .feature-card h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-card p {
+      color: #475569;
+    }
+
+    /* =====================
+       CTA
+    ====================== */
+    .cta {
+      background: var(--dark);
+      color: white;
+      text-align: center;
+      padding: 4rem 2rem;
+      border-radius: 1.5rem;
+      margin: 5rem auto;
+      max-width: 1100px;
+    }
+
+    .cta h2 {
+      font-size: 2.3rem;
+      margin-bottom: 1rem;
+    }
+
+    .cta button {
+      background: var(--secondary);
+      color: var(--dark);
+      padding: 1rem 2.5rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 1.5rem;
+    }
+
+    /* =====================
+       FOOTER
+    ====================== */
+    footer {
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* =====================
+       ANIMATIONS
+    ====================== */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* =====================
+       RESPONSIVE
+    ====================== */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAV -->
+  <header>
+    <nav class="nav">
+      <div class="logo">NovaSite</div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#cta">Get Started</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Build Beautiful Websites Faster</h1>
+      <p>
+        NovaSite is a modern, responsive starter website crafted with clean
+        HTML, CSS, and JavaScript — no frameworks required.
+      </p>
+      <button onclick="scrollToSection('features')">Explore Features</button>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="container">
+      <div class="section-title">
+        <h2>Powerful Features</h2>
+        <p>Everything you need to launch a modern website</p>
+      </div>
+
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Fast Performance</h3>
+          <p>Optimized layout and zero dependencies ensure blazing fast load times.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h3>Responsive Design</h3>
+          <p>Looks perfect on desktops, tablets, and mobile devices.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <h3>Modern UI</h3>
+          <p>Clean typography, smooth animations, and elegant spacing.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <h3>Easy to Extend</h3>
+          <p>Well-structured code makes customization effortless.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta">
+    <div class="cta">
+      <h2>Ready to Launch?</h2>
+      <p>Use this template as a foundation for your next project.</p>
+      <button onclick="alert('🚀 You are ready to build!')">Start Now</button>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    © 2026 NovaSite. Built with HTML, CSS & JavaScript.
+  </footer>
+
+  <!-- =====================
+       JAVASCRIPT
+  ====================== -->
+  <script>
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  </script>
+
+</body>
+</html>
