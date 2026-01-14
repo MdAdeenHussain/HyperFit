@@ -1,6 +1,47 @@
-<h1>Admin Dashboard</h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
 
-<ul>
-  <li><a href="/admin/users">View Users</a></li>
-  <li><a href="/logout">Logout</a></li>
-</ul>
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <h2>ADMIN</h2>
+    <a href="/admin/dashboard" class="active">Dashboard</a>
+    <a href="/admin/users">Users</a>
+    <a href="/admin/products">Products</a>
+    <a href="/logout" class="logout">Logout</a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <h1>Dashboard</h1>
+
+    <div class="stats">
+  <div class="card">
+    <h3>Total Users</h3>
+    <p>{{ total_users }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Verified Users</h3>
+    <p>{{ verified_users }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Blocked Users</h3>
+    <p>{{ blocked_users }}</p>
+  </div>
+</div>
+
+
+  </main>
+
+</div>
+
+</body>
+</html>

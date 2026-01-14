@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Products</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <aside class="admin-sidebar">
+    <h2>ADMIN</h2>
+    <a href="/admin/dashboard">Dashboard</a>
+    <a href="/admin/users">Users</a>
+    <a href="/admin/products" class="active">Products</a>
+    <a href="/logout" class="logout">Logout</a>
+  </aside>
+
+  <main class="admin-main">
+    <h1>Products</h1>
+
+    <a class="btn success" href="/admin/products/add">+ Add Product</a>
+
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td>{{ p.name }}</td>
+          <td>{{ p.category }}</td>
+          <td>₹{{ p.price }}</td>
+
+          <td>
+            <span class="badge {{ 'success' if p.is_active else 'danger' }}">
+              {{ "Active" if p.is_active else "Out of Stock" }}
+            </span>
+          </td>
+
+          <td>
+            <a class="btn" href="/admin/products/edit/{{ p.id }}">Edit</a>
+            <a class="btn danger" href="/admin/products/delete/{{ p.id }}">Delete</a>
+            <a class="btn success" href="/admin/products/toggle/{{ p.id }}">
+              Toggle
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </main>
+</div>
+
+</body>
+</html>

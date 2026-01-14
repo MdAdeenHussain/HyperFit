@@ -1,40 +1,78 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Users</title>
+  <title>Manage Users</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
 <body>
 
-<h2>Registered Users</h2>
+<div class="admin-layout">
 
-<table>
-  <tr>
-    <th>Name</th>
-    <th>Email</th>
-    <th>Phone</th>
-    <th>Email Verified</th>
-    <th>Phone Verified</th>
-    <th>Status</th>
-    <th>Action</th>
-  </tr>
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <h2>ADMIN</h2>
+    <a href="/admin/dashboard">Dashboard</a>
+    <a href="/admin/users" class="active">Users</a>
+    <a href="/admin/products" class="active">Products</a>
+    <a href="/logout" class="logout">Logout</a>
+  </aside>
 
-  {% for u in users %}
-  <tr>
-    <td>{{ u.name }}</td>
-    <td>{{ u.email }}</td>
-    <td>{{ u.phone }}</td>
-    <td>{{ "Yes" if u.email_verified else "No" }}</td>
-    <td>{{ "Yes" if u.phone_verified else "No" }}</td>
-    <td>{{ "Active" if u.is_active else "Blocked" }}</td>
-    <td>
-      <a href="/admin/toggle-user/{{ u.id }}">
-        {{ "Block" if u.is_active else "Unblock" }}
-      </a>
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+  <!-- MAIN -->
+  <main class="admin-main">
+    <h1>Users</h1>
+
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.name }}</td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.phone }}</td>
+
+          <td>
+            <span class="badge {{ 'success' if u.email_verified else 'danger' }}">
+              {{ "Verified" if u.email_verified else "No" }}
+            </span>
+          </td>
+
+          <td>
+            <span class="badge {{ 'success' if u.phone_verified else 'danger' }}">
+              {{ "Verified" if u.phone_verified else "No" }}
+            </span>
+          </td>
+
+          <td>
+            <span class="badge {{ 'success' if u.is_active else 'danger' }}">
+              {{ "Active" if u.is_active else "Blocked" }}
+            </span>
+          </td>
+
+          <td>
+            <a class="btn {{ 'danger' if u.is_active else 'success' }}"
+               href="/admin/toggle-user/{{ u.id }}">
+              {{ "Block" if u.is_active else "Unblock" }}
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </main>
+
+</div>
 
 </body>
 </html>

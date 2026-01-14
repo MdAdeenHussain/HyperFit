@@ -376,7 +376,19 @@ def admin_login():
 @app.route("/admin/dashboard")
 @admin_required
 def admin_dashboard():
-    return render_template("admin/dashboard.html")
+    total_users = User.query.count()
+    verified_users = User.query.filter_by(
+        email_verified=True,
+        phone_verified=True
+    ).count()
+    blocked_users = User.query.filter_by(is_active=False).count()
+
+    return render_template(
+        "admin/dashboard.html",
+        total_users=total_users,
+        verified_users=verified_users,
+        blocked_users=blocked_users
+    )
 
 
 @app.route("/admin/users")
@@ -393,6 +405,76 @@ def toggle_user(user_id):
     user.is_active = not user.is_active
     db.session.commit()
     return redirect("/admin/users")
+
+# ---------------- PRODUCTS ROUTE ----------------
+# VIEW ALL PRODUCTS
+@app.route("/admin/products")
+@admin_required
+def admin_products():
+    products = Product.query.all()
+    return render_template("admin/products.html", products=products)
+
+
+# ADD PRODUCT
+@app.route("/admin/products/add", methods=["GET", "POST"])
+@admin_required
+def add_product():
+    if request.method == "POST":
+        product = Product(
+            name=request.form["name"],
+            category=request.form["category"],
+            price=float(request.form["price"]),
+            description=request.form["description"],
+            image=request.form["image"]
+        )
+        db.session.add(product)
+        db.session.commit()
+        return redirect("/admin/products")
+
+    return render_template("admin/product_form.html", action="Add")
+
+
+# EDIT PRODUCT
+@app.route("/admin/products/edit/<int:product_id>", methods=["GET", "POST"])
+@admin_required
+def edit_product(product_id):
+    product = db.session.get(Product, product_id)
+
+    if request.method == "POST":
+        product.name = request.form["name"]
+        product.category = request.form["category"]
+        product.price = float(request.form["price"])
+        product.description = request.form["description"]
+        product.image = request.form["image"]
+        db.session.commit()
+        return redirect("/admin/products")
+
+    return render_template(
+        "admin/product_form.html",
+        action="Edit",
+        product=product
+    )
+
+
+# DELETE PRODUCT
+@app.route("/admin/products/delete/<int:product_id>")
+@admin_required
+def delete_product(product_id):
+    product = db.session.get(Product, product_id)
+    db.session.delete(product)
+    db.session.commit()
+    return redirect("/admin/products")
+
+
+# TOGGLE PRODUCT STATUS
+@app.route("/admin/products/toggle/<int:product_id>")
+@admin_required
+def toggle_product(product_id):
+    product = db.session.get(Product, product_id)
+    product.is_active = not product.is_active
+    db.session.commit()
+    return redirect("/admin/products")
+
 
 @app.route("/__debug__")
 def debug():
