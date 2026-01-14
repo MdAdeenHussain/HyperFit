@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Account</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+</head>
+<body>
+
+<div class="account-container">
+
+  <!-- LEFT MENU -->
+  <aside class="account-menu">
+    <h2>My Account</h2>
+
+    <button onclick="showSection('profile')">Profile</button>
+    <button onclick="showSection('orders')">Orders</button>
+    <button onclick="showSection('edit-profile')">Edit Profile</button>
+    <button onclick="showSection('change-password')">Change Password</button>
+
+    <a href="/logout" class="logout">Logout</a>
+  </aside>
+
+  <!-- RIGHT CONTENT -->
+  <section class="account-content">
+
+    <!-- PROFILE -->
+    <div id="profile" class="section active">
+      <h3>Profile</h3>
+      <p><strong>Name:</strong> {{ user.name }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <p><strong>Phone:</strong> {{ user.phone }}</p>
+      <p><strong>Gender:</strong> {{ user.gender }}</p>
+      <p><strong>Address:</strong> {{ user.address }}</p>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="orders" class="section">
+      <h3>Orders</h3>
+      <p>No orders yet.</p>
+    </div>
+
+    <!-- EDIT PROFILE -->
+    <div id="edit-profile" class="section">
+      <h3>Edit Profile</h3>
+
+      <form method="POST" action="/account/edit">
+        <input type="text" name="name" value="{{ user.name }}" required>
+
+        <select name="gender" required>
+          <option {{ 'selected' if user.gender=='Male' }}>Male</option>
+          <option {{ 'selected' if user.gender=='Female' }}>Female</option>
+          <option {{ 'selected' if user.gender=='Other' }}>Other</option>
+        </select>
+
+        <textarea name="address" required>{{ user.address }}</textarea>
+
+        <button type="submit">Save Changes</button>
+      </form>
+    </div>
+
+    <!-- CHANGE PASSWORD -->
+    <div id="change-password" class="section">
+      <h3>Change Password</h3>
+
+      <form method="POST" action="/account/change-password">
+        <input type="password" name="current_password" placeholder="Current Password" required>
+        <input type="password" name="new_password" placeholder="New Password" required>
+        <input type="password" name="confirm_password" placeholder="Confirm New Password" required>
+
+        <button type="submit">Update Password</button>
+      </form>
+    </div>
+
+  </section>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/account.js') }}"></script>
+</body>
+</html>

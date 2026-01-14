@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
+  <title>HyperFit-Strength meet Style</title>
+</head>
+<body>
+<!-- NAV -->
+  <header class="navbar">
+    <div class="logo"><img class="logo-img" src="/static/images/HyperFitlogo.jpeg" alt="Error"></div>
+    <div class="nav">
+      <nav class="nav-links">
+        <a href="#">Men</a>
+        <a href="#">Women</a>
+        <a href="#">Compressions</a>
+        <a href="#">New Arrivals 🔥</a>
+        <a href="#">Sale</a>
+        <a href="#">Accessories</a>
+      </nav>
+    </div>
+    <div class="nav-icon">
+      <span onclick="openSearch()">🔍</span>
+      <a href="#cart">🛒</a>
+      <a href="{{ '/account' if current_user.is_authenticated else '/login' }}">👤</a>
+
+    </div>
+
+
+
+    <!-- HAMBURGER -->
+     <div class="hamburger" onclick="toggleMenu()">☰</div>
+  </header>
+  <!-- MOBILE MENU -->
+  <div id="mobileOverlay" class="overlay" onclick="closeMenu()"></div>
+
+  <div id="mobileMenu" class="mobile-menu">
+    <a href="#">Men</a>
+    <a href="#">Women</a>
+    <a href="#">Compression</a>
+    <a href="#">New Arrivals 🔥</a>
+    <a href="#">Sale</a>
+    <a href="#">Accessories</a>
+    <a href="#">Winter Arc ❄️</a>
+
+    <div class="mobile-item" onclick="toggleDropdown('menDrop')">
+      Men <span>+</span>
+    </div>
+    <div id="menDrop" class="dropdown">
+      <a href="#">T-Shirts</a>
+      <a href="#">Joggers</a>
+      <a href="#">Stringers</a>
+      <a href="#">Hoodies</a>
+    </div>
+
+    <div class="mobile-item" onclick="toggleDropdown('womenDrop')">
+      Women <span>+</span>
+    </div>
+    <div id="womenDrop" class="dropdown">
+      <a href="#">Sports Bra</a>
+      <a href="#">Leggings</a>
+      <a href="#">Tops</a>
+      <a href="#">Hoodies</a>
+    </div>
+
+    <a href="#">Compression</a>
+    <a href="#">New Arrivals 🔥</a>
+    <a href="#">Sale</a>
+    <a href="#">Accessories</a>
+  </div>
+
+
+<!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Welcome to HyperFit</h1>
+      <p>Your Ultimate Destination for Fitness Gear</p>
+      <button onclick="scrollToSection('category-section')">Shop Now</button>
+    </div>
+  </section>
+
+<!-- SHOP BY CATEGORY -->
+  <section id="category-section">
+    <div class="category-header">
+      <div>
+        <h2>SHOP</h2>
+        <h1>BY CATEGORY</h1>
+      </div>
+
+      <div class="toggle">
+        <button class="active" onclick="showMen()">Men</button>
+        <button onclick="showWomen()">Women</button>
+      </div>
+    </div>
+
+    <div id="categoryGrid" class="category-grid"></div>
+  </section>
+
+<!-- SEARCH OVERLAY -->
+<div id="searchOverlay" class="search-overlay">
+
+  <div class="search-box">
+    <span class="close-search" onclick="closeSearch()">✖</span>
+
+    <form action="/search" method="GET">
+      <input 
+        type="text" 
+        name="q" 
+        placeholder="What are you looking for?....🔍"
+        autofocus
+        required
+      >
+      <button type="submit">Search</button>
+    </form>
+  </div>
+
+</div>
+
+
+  <!-- FOOTER -->
+  <footer class="footer">
+  <div class="footer-container">
+
+    <!-- BRAND INFO -->
+    <div class="footer-col">
+      <h2 class="footer-logo">HYPERFIT</h2>
+      <p>
+        Premium performance wear designed for athletes and everyday champions.
+        Built for comfort. Styled for confidence.
+      </p>
+    </div>
+
+    <!-- NEWSLETTER -->
+    <div class="footer-col">
+      <h3>Subscribe to our Newsletter</h3>
+      <p>Get exclusive offers, new drops & updates.</p>
+
+      <form class="newsletter-form">
+        <input type="email" placeholder="Enter your email" required>
+        <button type="submit">Subscribe</button>
+      </form>
+    </div>
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+
+    <!-- PAGES -->
+    <div class="footer-col">
+      <h3>Pages</h3>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">Store Locator</a></li>
+        <li><a href="#">Track Order</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+
+    <!-- POLICIES -->
+    <div class="footer-col">
+      <h3>Policies</h3>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms & Conditions</a></li>
+        <li><a href="#">Return & Refund Policy</a></li>
+        <li><a href="#">Shipping Policy</a></li>
+        <li><a href="#">Cookie Policy</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- FOOTER BOTTOM -->
+  <div class="footer-bottom">
+    © 2024 HYPERFIT. All rights reserved.
+  </div>
+</footer>
+
+
+  <!-- JAVASCRIPT -->
+  <script src="/static/js/category.js"></script> 
+  <script src="/static/js/main.js"></script>
+  
+</body>
+</html>
+  

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Users</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+
+<h2>Registered Users</h2>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Phone</th>
+    <th>Email Verified</th>
+    <th>Phone Verified</th>
+    <th>Status</th>
+    <th>Action</th>
+  </tr>
+
+  {% for u in users %}
+  <tr>
+    <td>{{ u.name }}</td>
+    <td>{{ u.email }}</td>
+    <td>{{ u.phone }}</td>
+    <td>{{ "Yes" if u.email_verified else "No" }}</td>
+    <td>{{ "Yes" if u.phone_verified else "No" }}</td>
+    <td>{{ "Active" if u.is_active else "Blocked" }}</td>
+    <td>
+      <a href="/admin/toggle-user/{{ u.id }}">
+        {{ "Block" if u.is_active else "Unblock" }}
+      </a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Search Results</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+
+<h2 style="padding:30px">
+  Search results for: "{{ query }}"
+</h2>
+
+{% if products %}
+  <section class="products">
+    {% for p in products %}
+      <div class="card">
+        <img src="{{ p.image }}">
+        <h3>{{ p.name }}</h3>
+        <p>₹{{ p.price }}</p>
+      </div>
+    {% endfor %}
+  </section>
+{% else %}
+  <p style="padding:30px;font-size:18px">
+    ❌ No results found
+  </p>
+{% endif %}
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from datetime import datetime, timedelta
+
+db = SQLAlchemy()
+
+class Newsletter(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120))
+    category = db.Column(db.String(50))
+    price = db.Column(db.Float)
+    image = db.Column(db.String(200))
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    name = db.Column(db.String(100), nullable=False)
+    gender = db.Column(db.String(20))
+    address = db.Column(db.Text)
+
+    phone = db.Column(db.String(15), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+
+    password = db.Column(db.String(200), nullable=False)
+
+    phone_verified = db.Column(db.Boolean, default=False)
+    email_verified = db.Column(db.Boolean, default=False)
+
+    is_admin = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+
+
+
+class OTP(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    otp_code = db.Column(db.String(6), nullable=False)
+    otp_type = db.Column(db.String(10))  # 'email' or 'phone'
+
+    expires_at = db.Column(db.DateTime, nullable=False)
+
+    user = db.relationship("User", backref="otps")
+
+
+
+
