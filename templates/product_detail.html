@@ -1,34 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>{{ product.name }}</title>
+  <meta charset="UTF-8">
+  <title>{{ product.name }} | HyperFit</title>
+
+  <!-- GLOBAL -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+  <!-- PAGE-SPECIFIC (MUST BE AFTER main.css) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/shop.css') }}">
 </head>
 <body>
 
-<div class="product-detail">
-  <img src="{{ url_for('static', filename='images/' + product.image) }}">
+<!-- ✅ SAME NAVBAR -->
+{% include "components/navbar.html" %}
 
-  <div class="info">
-    <h2>{{ product.name }}</h2>
-    <p class="price">₹{{ product.price }}</p>
-    <p>{{ product.description }}</p>
+<main class="detail-container">
 
-    <button>Add to Cart</button>
+  <div class="detail-grid">
+
+    <!-- IMAGE -->
+    <div class="detail-image">
+      {% set image_path = 'images/' ~ product.image_filename %}
+      <img
+        src="{{ url_for('static', filename=image_path) }}"
+        alt="{{ product.name }}"
+        loading="lazy"
+        onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/HyperFitlogo.jpeg') }}'"
+      >
+
+
+      {% if product.discounted_price %}
+        <span class="discount-badge big">
+          {{ product.discount_percent }}% OFF
+        </span>
+      {% endif %}
+    </div>
+
+    <!-- INFO -->
+    <div class="detail-info">
+      <h1>{{ product.name }}</h1>
+
+      {% if product.discounted_price %}
+        <p class="price">
+          <span class="old-price">₹{{ product.price }}</span>
+          <span class="new-price">₹{{ product.discounted_price }}</span>
+        </p>
+      {% else %}
+        <p class="price">₹{{ product.price }}</p>
+      {% endif %}
+
+      <p class="meta">
+        Category: <strong>{{ product.category }}</strong>
+      </p>
+
+      <p class="meta">
+        Tags: {{ product.tags }}
+      </p>
+
+      <h2>Product Description</h2>
+      <p class="meta">
+        {{ product.description }}
+      </p>
+
+      <button class="add-cart-btn">
+        Add to Cart
+      </button>
+
+    </div>
+
   </div>
-</div>
+
+</main>
 
 </body>
 </html>
-<img src="{{ product.image }}" class="zoom">
-<h1>{{ product.name }}</h1>
-<h2>₹{{ product.price }}</h2>
-
-<select>
-  <option>S</option>
-  <option>M</option>
-  <option>L</option>
-  <option>XL</option>
-</select>
-
-<button>Add to Cart</button>

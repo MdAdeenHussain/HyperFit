@@ -8,53 +8,7 @@
 </head>
 <body>
 
-<!-- NAV -->
-  <header class="navbar">
-    <div class="logo"><img class="logo-img" src="/static/images/HyperFitlogo.jpeg" alt="Error"></div>
-    <div class="nav">
-      <nav class="nav-links">
-        <a href="/shop?category=Men">Men</a>
-        <a href="/shop?category=Women">Women</a>
-        <a href="/shop?category=Compression">Compression</a>
-        <a href="/shop?category=New Arrivals">New Arrivals 🔥</a>
-        <a href="/shop?category=Sale">Sale</a>
-        <a href="/shop?category=Accessories">Accessories</a>
-
-      </nav>
-    </div>
-    <div class="nav-icon">
-      <span onclick="openSearch()">🔍</span>
-      <a href="#cart">🛒</a>
-      <a href="{{ '/account' if current_user.is_authenticated else '/login' }}">👤</a>
-
-    </div>
-
-
-
-    <!-- HAMBURGER -->
-     <div class="hamburger" onclick="openMobileMenu()">☰</div>
-  </header>
-  <!-- OVERLAY -->
-<div id="mobileOverlay" class="mobile-overlay" onclick="closeMobileMenu()"></div>
-
-<!-- MOBILE MENU -->
-<div id="mobileMenu" class="mobile-menu">
-
-  <div class="mobile-menu-header">
-    <span>Menu</span>
-    <span class="close-btn" onclick="closeMobileMenu()">✕</span>
-  </div>
-
-  <div class="mobile-menu-content">
-    <a href="/shop?category=Men">Men</a>
-    <a href="/shop?category=Women">Women</a>
-    <a href="/shop?category=Compression">Compression</a>
-    <a href="/shop?category=New Arrivals">New Arrivals 🔥</a>
-    <a href="/shop?category=Sale">Sale</a>
-    <a href="/shop?category=Accessories">Accessories</a>
-  </div>
-
-</div>
+{% include "components/navbar.html" %}
 
 
 <!-- HERO -->
@@ -82,6 +36,85 @@
 
     <div id="categoryGrid" class="category-grid"></div>
   </section>
+
+<!-- GENDER SECTIONS -->
+  <!-- MEN -->
+  <section class="home-category">
+
+    <h2 class="gender-title">Men</h2>
+
+    {% for subcat, items in catalog["Men"].items() %}
+      {% if items %}
+        <section id="men-{{ subcat|lower|replace(' ', '-') }}" class="subcategory-section">
+          <h3>MEN | {{ subcat }}</h3>
+
+          <div class="product-row">
+            {% for product in items %}
+              <a href="{{ url_for('product_detail', product_id=product.id) }}"
+                class="product-mini-card">
+
+                <img src="{{ url_for('static', filename='images/' ~ product.image_filename) }}"
+                    alt="{{ product.name }}">
+
+                <p>{{ product.name }}</p>
+
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+    {% endfor %}
+
+  </section>
+
+    <!-- WOMEN -->
+  <section class="home-category">
+
+    <h2 class="gender-title">Women</h2>
+
+    {% for subcat, items in catalog["Women"].items() %}
+      {% if items %}
+        <section id="women-{{ subcat|lower|replace(' ', '-') }}" class="subcategory-section">
+          <h3>WOMEN | {{ subcat }}</h3>
+
+          <div class="product-row">
+            {% for product in items %}
+              <a href="{{ url_for('product_detail', product_id=product.id) }}"
+                class="product-mini-card">
+
+                <img src="{{ url_for('static', filename='images/' ~ product.image_filename) }}">
+                <p>{{ product.name }}</p>
+
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+    {% endfor %}
+
+  </section>
+
+  <!-- ACCESSORIES -->
+  {% if catalog["Accessories"] %}
+  <section class="home-category">
+
+    <h2 class="gender-title">Accessories</h2>
+
+    <div class="product-row">
+      {% for product in catalog["Accessories"] %}
+        <a href="{{ url_for('product_detail', product_id=product.id) }}"
+          class="product-mini-card">
+
+          <img src="{{ url_for('static', filename='images/' ~ product.image_filename) }}">
+          <p>{{ product.name }}</p>
+
+        </a>
+      {% endfor %}
+    </div>
+
+  </section>
+  {% endif %}
+
 
 <!-- SEARCH OVERLAY -->
 <div id="searchOverlay" class="search-overlay">

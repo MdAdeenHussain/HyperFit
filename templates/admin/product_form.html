@@ -21,7 +21,7 @@
       <input name="name" placeholder="Product Name"
              value="{{ product.name if product else '' }}" required>
 
-      <select name="category" required>
+      <!-- <select name="category" required>
         <option value="">Select Category</option>
 
         {% for c in ["Men", "Women", "Compression", "New Arrivals", "Sale", "Accessories"] %}
@@ -30,14 +30,50 @@
             {{ c }}
           </option>
         {% endfor %}
-      </select>
+      </select> -->
 
+      <h3>Primary Category</h3>
+
+      <label><input type="radio" name="category" value="Men" required> Men</label>
+      <label><input type="radio" name="category" value="Women"> Women</label>
+      <label><input type="radio" name="category" value="Accessories"> Accessories</label>
+      
+      <div id="subCategoryWrapper" style="display: none;">
+        <h3>Product Type</h3>
+
+        <select name="sub_category" id="subCategory" required>
+          <option value="">Select option</option>
+        </select>
+      </div>
+
+      <h3>Tags</h3>
+
+      <label><input type="checkbox" name="tags" value="Compression"> Compression</label>
+      <label><input type="checkbox" name="tags" value="New Arrival"> New Arrival</label>
+      <label>
+        <input type="checkbox" name="tags" value="Sale" id="saleCheckbox">
+        Sale
+      </label>
+      
       <input name="price" type="number" step="0.01"
              placeholder="Price"
              value="{{ product.price if product else '' }}" required>
+      
+      <div id="saleFields" style="display:none; margin-top:10px;">
+        <label>
+          Discount (%):
+          <input type="number" name="discount_percent" id="discountPercent" min="1" max="90">
+        </label>
 
-      <input name="image" placeholder="Image URL / filename"
-             value="{{ product.image if product else '' }}">
+        <p>
+          <strong>Discounted Price: ₹
+            <span id="discountedPrice">0</span>
+          </strong>
+        </p>
+      </div>
+
+      <input name="image_filename" placeholder="Image URL / filename"
+             value="{{ product.image_filename if product else '' }}">
 
       <textarea name="description"
                 placeholder="Description">{{ product.description if product else '' }}</textarea>
@@ -47,6 +83,86 @@
 
   </main>
 </div>
+<!-- JAVA SCRIPT -->
+<script>
+  const saleCheckbox = document.getElementById("saleCheckbox");
+  const saleFields = document.getElementById("saleFields");
+
+  const priceInput = document.querySelector('input[name="price"]');
+  const discountInput = document.getElementById("discountPercent");
+  const discountedPriceEl = document.getElementById("discountedPrice");
+
+  if (saleCheckbox) {
+    saleCheckbox.addEventListener("change", () => {
+      saleFields.style.display = saleCheckbox.checked ? "block" : "none";
+    });
+  }
+
+  if (discountInput) {
+    discountInput.addEventListener("input", () => {
+      const price = parseFloat(priceInput.value);
+      const discount = parseFloat(discountInput.value);
+
+      if (!price || !discount) {
+        discountedPriceEl.innerText = "0";
+        return;
+      }
+
+      const discounted = price - (price * discount / 100);
+      discountedPriceEl.innerText = discounted.toFixed(2);
+    });
+  }
+
+  
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const categoryRadios = document.querySelectorAll(
+      'input[name="category"]'
+    );
+
+    const subCategoryWrapper = document.getElementById("subCategoryWrapper");
+    const subCategorySelect = document.getElementById("subCategory");
+
+    const subCategoryOptions = {
+      Men: ["T-Shirts", "Joggers", "Stringers", "Hoodies"],
+      Women: ["Sports Bra", "Leggings", "Tops", "Hoodies"]
+    };
+
+    categoryRadios.forEach(radio => {
+      radio.addEventListener("change", () => {
+
+        const selected = radio.value;
+
+        // Clear old options
+        subCategorySelect.innerHTML =
+          '<option value="">Select option</option>';
+
+        // Accessories → hide sub-category
+        if (selected === "Accessories") {
+          subCategoryWrapper.style.display = "none";
+          subCategorySelect.removeAttribute("required");
+          return;
+        }
+
+        // Men / Women → show sub-category
+        subCategoryWrapper.style.display = "block";
+        subCategorySelect.setAttribute("required", "required");
+
+        subCategoryOptions[selected].forEach(item => {
+          const option = document.createElement("option");
+          option.value = item;
+          option.textContent = item;
+          subCategorySelect.appendChild(option);
+        });
+
+      });
+    });
+
+  });
+
+
+</script>
+
 
 </body>
 </html>

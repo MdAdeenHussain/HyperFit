@@ -12,9 +12,13 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     category = db.Column(db.String(50), nullable=False)
+    sub_category = db.Column(db.String(50), nullable=True)
+    tags = db.Column(db.String(200))  # comma-separated
     price = db.Column(db.Float, nullable=False)
+    discount_percent = db.Column(db.Float, default=0)
+    discounted_price = db.Column(db.Float)
     description = db.Column(db.Text)
-    image = db.Column(db.String(200))
+    image_filename = db.Column(db.String(200), nullable=False)
 
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())

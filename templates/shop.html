@@ -1,34 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Shop</title>
+  <meta charset="UTF-8">
+  <title>{{ category }} | HyperFit</title>
+
+  <!-- GLOBAL NAVBAR STYLES -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+  <!-- SHOP PAGE STYLES -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/shop.css') }}">
 </head>
 <body>
 
-<h1 class="shop-title">
-  {{ category if category else "All Products" }}
-</h1>
+<!-- ✅ SAME NAVBAR AS home.html -->
+{% include "components/navbar.html" %}
 
-<div class="product-grid">
+<main class="shop-container">
 
-  {% for p in products %}
-  <div class="product-card">
-    <img src="{{ url_for('static', filename='images/' + p.image) }}"
-         alt="{{ p.name }}">
+  <h1 class="shop-title">{{ category }}</h1>
 
-    <h3>{{ p.name }}</h3>
-    <p class="price">₹{{ p.price }}</p>
+  {% if products %}
+  <div class="shop-grid">
 
-    <a href="/product/{{ p.id }}" class="btn">View</a>
+    {% for product in products %}
+    <div class="product-card">
+
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="image-wrap">
+        {% set image_path = 'images/' ~ product.image_filename %}
+        <img
+          src="{{ url_for('static', filename=image_path) }}"
+          alt="{{ product.name }}"
+          loading="lazy"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/HyperFitlogo.jpeg') }}'"
+        >
+
+        {% if product.discounted_price %}
+          <span class="discount-badge">
+            -{{ product.discount_percent }}%
+          </span>
+        {% endif %}
+      </a>
+
+      <div class="product-info">
+        <h3>{{ product.name }}</h3>
+
+        {% if product.discounted_price %}
+          <p class="price">
+            <span class="old-price">₹{{ product.price }}</span>
+            <span class="new-price">₹{{ product.discounted_price }}</span>
+          </p>
+        {% else %}
+          <p class="price">₹{{ product.price }}</p>
+        {% endif %}
+
+        <a href="{{ url_for('product_detail', product_id=product.id) }}"
+           class="view-btn">
+          View Product
+        </a>
+      </div>
+
+    </div>
+    {% endfor %}
+
   </div>
-  {% endfor %}
-
-  {% if not products %}
-    <p>No products available.</p>
+  {% else %}
+    <p class="empty-text">No products found.</p>
   {% endif %}
 
-</div>
+</main>
 
 </body>
 </html>

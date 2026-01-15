@@ -3,7 +3,7 @@
       --primary: rgb(88, 88, 88);
       --secondary: aqua;
       --dark: #0f172a;
-      --light: #f8fafc;
+      --light: #6ace79;
       --muted: #94a3b8;
     }
 
@@ -13,6 +13,10 @@
       box-sizing: border-box;
       font-family: "Segoe UI", system-ui, sans-serif;
     }
+
+html {
+  scroll-behavior: smooth; /* 🔥 smooth scroll */
+}
 
 body {
   font-family: "Poppins", sans-serif;
@@ -277,6 +281,82 @@ body.menu-open {
 .price {
   color: #555;
   font-weight: 500;
+}
+
+/* GENDER SECTIONS */
+.gender-section {
+  padding: 40px 20px;
+}
+
+.gender-section h2 {
+  margin: 20px 0 12px;
+  font-size: 22px;
+}
+
+.subcat-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.subcat-card {
+  min-width: 140px;
+  padding: 18px;
+  background: #f4f4f4;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 600;
+  text-decoration: none;
+  color: #000;
+  transition: transform 0.3s;
+}
+
+.subcat-card:hover {
+  transform: translateY(-5px);
+}
+
+/* GENDER SECTIONS */
+.home-category {
+  padding: 40px 20px;
+}
+
+.gender-title {
+  font-size: 26px;
+  margin-bottom: 20px;
+}
+
+.subcategory-section {
+  margin-bottom: 36px;
+}
+
+.subcategory-section h3 {
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+
+.product-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+}
+
+.product-mini-card {
+  min-width: 160px;
+  text-decoration: none;
+  color: #000;
+}
+
+.product-mini-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.product-mini-card p {
+  margin-top: 6px;
+  font-size: 14px;
 }
 
 /* SEARCH OVERLAY */

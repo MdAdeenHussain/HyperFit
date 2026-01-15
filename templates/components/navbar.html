@@ -1,0 +1,47 @@
+<!-- NAV -->
+  <header class="navbar">
+    <div class="logo"><img class="logo-img" src="/static/images/HyperFitlogo.jpeg" alt="Error"></div>
+    <div class="nav">
+      <nav class="nav-links">
+        <a href="/shop?category=Men">Men</a>
+        <a href="/shop?category=Women">Women</a>
+        <a href="/shop?category=Compression">Compression</a>
+        <a href="/shop?category=New Arrivals">New Arrivals 🔥</a>
+        <a href="/shop?category=Sale">Sale</a>
+        <a href="/shop?category=Accessories">Accessories</a>
+
+      </nav>
+    </div>
+    <div class="nav-icon">
+      <span onclick="openSearch()">🔍</span>
+      <a href="#cart">🛒</a>
+      <a href="{{ '/account' if current_user.is_authenticated else '/login' }}">👤</a>
+
+    </div>
+
+
+
+    <!-- HAMBURGER -->
+     <div class="hamburger" onclick="openMobileMenu()">☰</div>
+  </header>
+  <!-- OVERLAY -->
+<div id="mobileOverlay" class="mobile-overlay" onclick="closeMobileMenu()"></div>
+
+<!-- MOBILE MENU -->
+<div id="mobileMenu" class="mobile-menu">
+
+  <div class="mobile-menu-header">
+    <span>Menu</span>
+    <span class="close-btn" onclick="closeMobileMenu()">✕</span>
+  </div>
+
+  <div class="mobile-menu-content">
+    <a href="/shop?category=Men">Men</a>
+    <a href="/shop?category=Women">Women</a>
+    <a href="/shop?category=Compression">Compression</a>
+    <a href="/shop?category=New Arrivals">New Arrivals 🔥</a>
+    <a href="/shop?category=Sale">Sale</a>
+    <a href="/shop?category=Accessories">Accessories</a>
+  </div>
+
+</div>

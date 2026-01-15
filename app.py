@@ -288,7 +288,38 @@ def add_security_headers(response):
 # ---------------- HOME ROUTE ----------------
 @app.route("/")
 def home():
-    return render_template("home.html")
+    products = Product.query.filter_by(is_active=True).all()
+
+    # Group products by category + sub-category
+    catalog = {
+        "Men": {
+            "T-Shirts": [],
+            "Joggers": [],
+            "Stringers": [],
+            "Hoodies": []
+        },
+        "Women": {
+            "Sports Bra": [],
+            "Leggings": [],
+            "Tops": [],
+            "Hoodies": []
+        },
+        "Accessories": []
+    }
+
+    for product in products:
+        if product.category == "Men":
+            if product.sub_category in catalog["Men"]:
+                catalog["Men"][product.sub_category].append(product)
+
+        elif product.category == "Women":
+            if product.sub_category in catalog["Women"]:
+                catalog["Women"][product.sub_category].append(product)
+
+        elif product.category == "Accessories":
+            catalog["Accessories"].append(product)
+
+    return render_template("home.html", catalog=catalog)
 
 # ---------------- NEWSLETTER ROUTE ----------------
 @app.route("/subscribe", methods=["POST"])
@@ -455,18 +486,36 @@ def admin_products():
     products = Product.query.all()
     return render_template("admin/products.html", products=products)
 
+def safe_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 # ADD PRODUCT
 @app.route("/admin/products/add", methods=["GET", "POST"])
 @admin_required
 def add_product():
     if request.method == "POST":
+        tags = request.form.getlist("tags")
+        category = request.form.get("category")
+        sub_category = request.form.get("sub_category")
+        discount_percent = request.form.get("discount_percent", 0)
+        discount_percent = safe_float(discount_percent) if discount_percent else 0
+        price=safe_float(request.form["price"])
+        discounted_price = None
+        if "Sale" in tags:
+            discounted_price = price - (price * discount_percent / 100)
         product = Product(
             name=request.form["name"],
-            category=request.form["category"],
-            price=float(request.form["price"]),
+            category=category,
+            sub_category=sub_category,
+            tags=",".join(tags),
+            discount_percent=discount_percent,
+            discounted_price=discounted_price,
+            price=price,
             description=request.form["description"],
-            image=request.form["image"]
+            image_filename=request.form["image_filename"]
         )
         db.session.add(product)
         db.session.commit()
@@ -484,9 +533,14 @@ def edit_product(product_id):
     if request.method == "POST":
         product.name = request.form["name"]
         product.category = request.form["category"]
-        product.price = float(request.form["price"])
+        product.sub_category = request.form["sub_category"]
+        product.tags = ",".join(request.form.getlist("tags"))
+        product.price = safe_float(request.form["price"])
+        product.discount_percent = safe_float(request.form.get("discount_percent", 0))
+        if "Sale" in request.form.getlist("tags"):
+            product.discounted_price = product.price - (product.price * product.discount_percent / 100)
         product.description = request.form["description"]
-        product.image = request.form["image"]
+        product.image_filename = request.form["image_filename"]
         db.session.commit()
         return redirect("/admin/products")
 
@@ -520,14 +574,18 @@ def toggle_product(product_id):
 @app.route("/shop")
 def shop():
     category = request.args.get("category")
+    gender = request.args.get("gender")
+    sub = request.args.get("sub")
 
-    if category:
-        products = Product.query.filter_by(
-            category=category,
-            is_active=True
-        ).all()
-    else:
-        products = Product.query.filter_by(is_active=True).all()
+    query = Product.query.filter_by(is_active=True)
+
+    if gender:
+        query = query.filter_by(primary_category=gender)
+
+    if sub:
+        query = query.filter_by(sub_category=sub)
+
+    products = query.all()
 
     return render_template("shop.html", products=products, category=category)
 
