@@ -1,8 +1,9 @@
 from flask import Flask, render_template, redirect, flash, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, Newsletter,Product, User, OTP
+from models import db, Newsletter,Product, User, OTP, Order
 import random
 from datetime import datetime, timezone, timedelta
 from functools import wraps
@@ -383,14 +384,54 @@ def admin_dashboard():
     ).count()
     blocked_users = User.query.filter_by(is_active=False).count()
 
+    today = datetime.now(timezone.utc)
+    week_ago = today - timedelta(days=7)
+
+    total_orders = Order.query.count()
+    total_returns = Order.query.filter_by(status="returned").count()
+
+    total_income = db.session.query(
+        func.sum(Order.total_amount)
+    ).filter(Order.status == "delivered").scalar() or 0
+
+    weekly_income = db.session.query(
+        func.sum(Order.total_amount)
+    ).filter(
+        Order.status == "delivered",
+        Order.created_at >= week_ago
+    ).scalar() or 0
+
+    # Revenue per day (last 7 days)
+    revenue_data = (
+        db.session.query(
+            func.date(Order.created_at),
+            func.sum(Order.total_amount)
+        )
+        .filter(
+            Order.status == "delivered",
+            Order.created_at >= week_ago
+        )
+        .group_by(func.date(Order.created_at))
+        .all()
+    )
+
+    labels = [str(r[0]) for r in revenue_data]
+    values = [float(r[1]) for r in revenue_data]
+
     return render_template(
         "admin/dashboard.html",
         total_users=total_users,
         verified_users=verified_users,
-        blocked_users=blocked_users
+        blocked_users=blocked_users,
+        total_orders=total_orders,
+        total_returns=total_returns,
+        total_income=total_income,
+        weekly_income=weekly_income,
+        labels=labels,
+        values=values
     )
 
-
+# ---------------- ADMIN USERS ROUTE ----------------
 @app.route("/admin/users")
 @admin_required
 def admin_users():
@@ -475,6 +516,31 @@ def toggle_product(product_id):
     db.session.commit()
     return redirect("/admin/products")
 
+# ---------------- SHOP ROUTE ----------------
+@app.route("/shop")
+def shop():
+    category = request.args.get("category")
+
+    if category:
+        products = Product.query.filter_by(
+            category=category,
+            is_active=True
+        ).all()
+    else:
+        products = Product.query.filter_by(is_active=True).all()
+
+    return render_template("shop.html", products=products, category=category)
+
+
+# ---------------- PRODUCT DETAIL ROUTE ----------------
+@app.route("/product/<int:product_id>")
+def product_detail(product_id):
+    product = Product.query.filter_by(id=product_id, is_active=True).first_or_404()
+    return render_template("product_detail.html", product=product)
+
+
+
+# ---------------- DEBUG ROUTE ----------------
 
 @app.route("/__debug__")
 def debug():

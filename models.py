@@ -37,8 +37,6 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
 
-
-
 class OTP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
@@ -50,6 +48,10 @@ class OTP(db.Model):
 
     user = db.relationship("User", backref="otps")
 
-
-
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)
+    total_amount = db.Column(db.Float)
+    status = db.Column(db.String(20))  # placed, delivered, returned
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

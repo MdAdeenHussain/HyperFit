@@ -22,26 +22,77 @@
     <h1>Dashboard</h1>
 
     <div class="stats">
-  <div class="card">
-    <h3>Total Users</h3>
-    <p>{{ total_users }}</p>
-  </div>
+      <div class="card">
+        <h3>Total Users</h3>
+        <p>{{ total_users }}</p>
+      </div>
 
-  <div class="card">
-    <h3>Verified Users</h3>
-    <p>{{ verified_users }}</p>
-  </div>
+      <div class="card">
+        <h3>Verified Users</h3>
+        <p>{{ verified_users }}</p>
+      </div>
 
-  <div class="card">
-    <h3>Blocked Users</h3>
-    <p>{{ blocked_users }}</p>
-  </div>
-</div>
+      <div class="card">
+        <h3>Blocked Users</h3>
+        <p>{{ blocked_users }}</p>
+      </div>
 
+      <div class="card">
+        Total Orders<br><strong>{{ total_orders }}</strong>
+      </div>
+
+      <div class="card">
+        Total Revenue<br><strong>₹{{ total_income }}</strong>
+      </div>
+
+      <div class="card">
+        Weekly Revenue<br><strong>₹{{ weekly_income }}</strong>
+      </div>
+
+      <div class="card">
+        Returns<br><strong>{{ total_returns }}</strong>
+      </div>
+    </div>
+
+    <div style="max-width: 900px; margin-top: 40px;">
+      <canvas id="revenueChart"
+      data-labels='{{ labels | tojson }}'
+      data-values='{{ values | tojson }}'></canvas>
+    </div>
 
   </main>
 
 </div>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const canvas = document.getElementById("revenueChart");
+  const ctx = canvas.getContext("2d");
+
+  const labels = JSON.parse(canvas.dataset.labels);
+  const values = JSON.parse(canvas.dataset.values);
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Revenue (₹)",
+        data: values,
+        borderWidth: 3,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+
 
 </body>
 </html>

@@ -21,8 +21,16 @@
       <input name="name" placeholder="Product Name"
              value="{{ product.name if product else '' }}" required>
 
-      <input name="category" placeholder="Category (Men/Women)"
-             value="{{ product.category if product else '' }}" required>
+      <select name="category" required>
+        <option value="">Select Category</option>
+
+        {% for c in ["Men", "Women", "Compression", "New Arrivals", "Sale", "Accessories"] %}
+          <option value="{{ c }}"
+            {% if product and product.category == c %}selected{% endif %}>
+            {{ c }}
+          </option>
+        {% endfor %}
+      </select>
 
       <input name="price" type="number" step="0.01"
              placeholder="Price"

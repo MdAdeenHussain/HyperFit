@@ -7,17 +7,19 @@
   <title>HyperFit-Strength meet Style</title>
 </head>
 <body>
+
 <!-- NAV -->
   <header class="navbar">
     <div class="logo"><img class="logo-img" src="/static/images/HyperFitlogo.jpeg" alt="Error"></div>
     <div class="nav">
       <nav class="nav-links">
-        <a href="#">Men</a>
-        <a href="#">Women</a>
-        <a href="#">Compressions</a>
-        <a href="#">New Arrivals 🔥</a>
-        <a href="#">Sale</a>
-        <a href="#">Accessories</a>
+        <a href="/shop?category=Men">Men</a>
+        <a href="/shop?category=Women">Women</a>
+        <a href="/shop?category=Compression">Compression</a>
+        <a href="/shop?category=New Arrivals">New Arrivals 🔥</a>
+        <a href="/shop?category=Sale">Sale</a>
+        <a href="/shop?category=Accessories">Accessories</a>
+
       </nav>
     </div>
     <div class="nav-icon">
@@ -30,45 +32,29 @@
 
 
     <!-- HAMBURGER -->
-     <div class="hamburger" onclick="toggleMenu()">☰</div>
+     <div class="hamburger" onclick="openMobileMenu()">☰</div>
   </header>
-  <!-- MOBILE MENU -->
-  <div id="mobileOverlay" class="overlay" onclick="closeMenu()"></div>
+  <!-- OVERLAY -->
+<div id="mobileOverlay" class="mobile-overlay" onclick="closeMobileMenu()"></div>
 
-  <div id="mobileMenu" class="mobile-menu">
-    <a href="#">Men</a>
-    <a href="#">Women</a>
-    <a href="#">Compression</a>
-    <a href="#">New Arrivals 🔥</a>
-    <a href="#">Sale</a>
-    <a href="#">Accessories</a>
-    <a href="#">Winter Arc ❄️</a>
+<!-- MOBILE MENU -->
+<div id="mobileMenu" class="mobile-menu">
 
-    <div class="mobile-item" onclick="toggleDropdown('menDrop')">
-      Men <span>+</span>
-    </div>
-    <div id="menDrop" class="dropdown">
-      <a href="#">T-Shirts</a>
-      <a href="#">Joggers</a>
-      <a href="#">Stringers</a>
-      <a href="#">Hoodies</a>
-    </div>
-
-    <div class="mobile-item" onclick="toggleDropdown('womenDrop')">
-      Women <span>+</span>
-    </div>
-    <div id="womenDrop" class="dropdown">
-      <a href="#">Sports Bra</a>
-      <a href="#">Leggings</a>
-      <a href="#">Tops</a>
-      <a href="#">Hoodies</a>
-    </div>
-
-    <a href="#">Compression</a>
-    <a href="#">New Arrivals 🔥</a>
-    <a href="#">Sale</a>
-    <a href="#">Accessories</a>
+  <div class="mobile-menu-header">
+    <span>Menu</span>
+    <span class="close-btn" onclick="closeMobileMenu()">✕</span>
   </div>
+
+  <div class="mobile-menu-content">
+    <a href="/shop?category=Men">Men</a>
+    <a href="/shop?category=Women">Women</a>
+    <a href="/shop?category=Compression">Compression</a>
+    <a href="/shop?category=New Arrivals">New Arrivals 🔥</a>
+    <a href="/shop?category=Sale">Sale</a>
+    <a href="/shop?category=Accessories">Accessories</a>
+  </div>
+
+</div>
 
 
 <!-- HERO -->
@@ -183,9 +169,9 @@
 
 
   <!-- JAVASCRIPT -->
-  <script src="/static/js/category.js"></script> 
-  <script src="/static/js/main.js"></script>
-  
+  <script src="{{ url_for('static', filename='js/category.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 </body>
 </html>
   

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shop</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/shop.css') }}">
+</head>
+<body>
+
+<h1 class="shop-title">
+  {{ category if category else "All Products" }}
+</h1>
+
+<div class="product-grid">
+
+  {% for p in products %}
+  <div class="product-card">
+    <img src="{{ url_for('static', filename='images/' + p.image) }}"
+         alt="{{ p.name }}">
+
+    <h3>{{ p.name }}</h3>
+    <p class="price">₹{{ p.price }}</p>
+
+    <a href="/product/{{ p.id }}" class="btn">View</a>
+  </div>
+  {% endfor %}
+
+  {% if not products %}
+    <p>No products available.</p>
+  {% endif %}
+
+</div>
+
+</body>
+</html>
