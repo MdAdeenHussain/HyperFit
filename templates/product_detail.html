@@ -63,15 +63,16 @@
         {{ product.description }}
       </p>
 
-      <button class="add-cart-btn">
-        Add to Cart
-      </button>
+      <a href="{{ url_for('add_to_cart', product_id=product.id) }}"
+       class="btn-primary add-cart-btn">
+       Add to Cart
+    </a>
 
     </div>
 
   </div>
 
 </main>
-
+{% include "components/footer.html" %}
 </body>
 </html>

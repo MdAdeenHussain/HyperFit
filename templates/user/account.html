@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <title>My Account</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+  <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
 </head>
 <body>
+{% include "components/navbar.html" %}
 
 <div class="account-container">
 
@@ -76,6 +78,7 @@
 
 </div>
 
+{% include "components/footer.html" %}
 <script src="{{ url_for('static', filename='js/account.js') }}"></script>
 </body>
 </html>

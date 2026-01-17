@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <title>Create Account</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
 </head>
 <body>
+{% include "components/navbar.html" %}
 
 <div class="auth-box">
   <h2>Create Account</h2>
@@ -40,5 +42,6 @@
   </div>
 </div>
 
+{% include "components/footer.html" %}
 </body>
 </html>

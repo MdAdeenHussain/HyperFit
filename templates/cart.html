@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Cart</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+{% include "components/navbar.html" %}
+
+  <section class="page-container">
+  <h2 class="page-title">Your Cart</h2>
+
+  <div class="cart-list">
+    {% for id, item in cart.items() %}
+    <div class="cart-card">
+      <img src="{{ url_for('static', filename='images/' ~ item.image) }}">
+      <div class="cart-info">
+        <p class="cart-name">{{ item.name }}</p>
+        <p class="cart-price">₹{{ item.price }} × {{ item.quantity }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="cart-summary">
+    <p>Total</p>
+    <h3>₹{{ total }}</h3>
+    <a href="/checkout" class="btn-primary full">Checkout</a>
+  </div>
+</section>
+
+  {% include "components/footer.html" %}
+</body>
+</html>

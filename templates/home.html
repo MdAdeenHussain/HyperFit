@@ -10,111 +10,131 @@
 
 {% include "components/navbar.html" %}
 
-
 <!-- HERO -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1>Welcome to HyperFit</h1>
-      <p>Your Ultimate Destination for Fitness Gear</p>
-      <button onclick="scrollToSection('category-section')">Shop Now</button>
-    </div>
-  </section>
+<section class="hero">
+  <img src="{{ url_for('static', filename='images/HeroBanner.png') }}" alt="HyperFit">
+  <div class="hero-content">
+    <h1>Train Hard. Look Strong.</h1>
+    <a href="/shop" class="btn-primary">Shop Now</a>
+  </div>
+</section>
 
 <!-- SHOP BY CATEGORY -->
-  <section id="category-section">
-    <div class="category-header">
-      <div>
-        <h2>SHOP</h2>
-        <h1>BY CATEGORY</h1>
-      </div>
+<section class="section">
+  <h2 class="section-title">Shop by Category</h2>
 
-      <div class="toggle">
-        <button class="active" onclick="showMen()">Men</button>
-        <button onclick="showWomen()">Women</button>
+  <div class="category-row">
+    <button onclick="scrollToSection('sec-men')" class="cat-btn">MEN</button>
+    <button onclick="scrollToSection('sec-women')" class="cat-btn">WOMEN</button>
+    <button onclick="scrollToSection('sec-accessories')" class="cat-btn">ACCESSORIES</button>
+  </div>
+</section>
+
+<!-- MEN -->
+<section class="section">
+  <section id="sec-men">
+  <h2 class="section-title">Men</h2>
+
+  {% for subcat, items in catalog["Men"].items() %}
+    {% if items %}
+    <div id="men-{{ subcat|lower|replace(' ', '-') }}" class="sub-section">
+      <h3 class="sub-title">MEN | {{ subcat }}</h3>
+
+      <div class="product-scroll">
+        {% for product in items %}
+          <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card">
+            <img src="{{ url_for('static', filename='images/' ~ product.image_filename) }}">
+            <p class="product-name">{{ product.name }}</p>
+
+            {% if product.discounted_price %}
+              <p class="price">
+                <span class="old">₹{{ product.price }}</span>
+                <span class="new">₹{{ product.discounted_price }}</span>
+              </p>
+            {% else %}
+              <p class="price">₹{{ product.price }}</p>
+            {% endif %}
+          </a>
+        {% endfor %}
       </div>
     </div>
+    {% endif %}
+  {% endfor %}
+</section>
 
-    <div id="categoryGrid" class="category-grid"></div>
-  </section>
-
-<!-- GENDER SECTIONS -->
-  <!-- MEN -->
-  <section class="home-category">
-
-    <h2 class="gender-title">Men</h2>
-
-    {% for subcat, items in catalog["Men"].items() %}
-      {% if items %}
-        <section id="men-{{ subcat|lower|replace(' ', '-') }}" class="subcategory-section">
-          <h3>MEN | {{ subcat }}</h3>
-
-          <div class="product-row">
-            {% for product in items %}
-              <a href="{{ url_for('product_detail', product_id=product.id) }}"
-                class="product-mini-card">
-
-                <img src="{{ url_for('static', filename='images/' ~ product.image_filename) }}"
-                    alt="{{ product.name }}">
-
-                <p>{{ product.name }}</p>
-
-              </a>
-            {% endfor %}
-          </div>
-        </section>
-      {% endif %}
-    {% endfor %}
-
-  </section>
-
-    <!-- WOMEN -->
-  <section class="home-category">
-
-    <h2 class="gender-title">Women</h2>
+<!-- WOMEN -->
+  <section id="sec-women">
+    <h2 class="section-title">Women</h2>
 
     {% for subcat, items in catalog["Women"].items() %}
       {% if items %}
-        <section id="women-{{ subcat|lower|replace(' ', '-') }}" class="subcategory-section">
-          <h3>WOMEN | {{ subcat }}</h3>
+      <div id="women-{{ subcat|lower|replace(' ', '-') }}" class="sub-section">
+        <h3 class="sub-title">WOMEN | {{ subcat }}</h3>
 
-          <div class="product-row">
-            {% for product in items %}
-              <a href="{{ url_for('product_detail', product_id=product.id) }}"
-                class="product-mini-card">
+        <div class="product-scroll">
+          {% for product in items %}
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card">
+              <img src="{{ url_for('static', filename='images/' ~ product.image_filename) }}">
+              <p class="product-name">{{ product.name }}</p>
 
-                <img src="{{ url_for('static', filename='images/' ~ product.image_filename) }}">
-                <p>{{ product.name }}</p>
-
-              </a>
-            {% endfor %}
-          </div>
-        </section>
+              {% if product.discounted_price %}
+                <p class="price">
+                  <span class="old">₹{{ product.price }}</span>
+                  <span class="new">₹{{ product.discounted_price }}</span>
+                </p>
+              {% else %}
+                <p class="price">₹{{ product.price }}</p>
+              {% endif %}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
       {% endif %}
     {% endfor %}
-
   </section>
 
-  <!-- ACCESSORIES -->
-  {% if catalog["Accessories"] %}
-  <section class="home-category">
+<!-- ACCESSORIES -->
+    <section id="sec-accessories">
+    <h2 class="section-title">Accessories</h2>
 
-    <h2 class="gender-title">Accessories</h2>
-
-    <div class="product-row">
+    {% if catalog["Accessories"] %}
+    <div class="product-scroll">
       {% for product in catalog["Accessories"] %}
         <a href="{{ url_for('product_detail', product_id=product.id) }}"
-          class="product-mini-card">
+          class="product-card">
 
-          <img src="{{ url_for('static', filename='images/' ~ product.image_filename) }}">
-          <p>{{ product.name }}</p>
+          <img src="{{ url_for('static',
+            filename='images/' ~ product.image_filename) }}"
+            alt="{{ product.name }}">
+
+          <p class="product-name">{{ product.name }}</p>
+
+          {% if product.discounted_price %}
+            <p class="price">
+              <span class="old">₹{{ product.price }}</span>
+              <span class="new">₹{{ product.discounted_price }}</span>
+            </p>
+          {% else %}
+            <p class="price">₹{{ product.price }}</p>
+          {% endif %}
 
         </a>
       {% endfor %}
     </div>
-
+    {% else %}
+      <p class="empty-text">No accessories available</p>
+    {% endif %}
   </section>
-  {% endif %}
+</section>
 
+<!-- WHY HYPERFIT -->
+<section class="why">
+  <h2>Why HyperFit?</h2>
+  <p>
+    Compression-driven designs. Sweat-proof fabrics. Built for lifters, runners,
+    fighters & everyday athletes.
+  </p>
+</section>
 
 <!-- SEARCH OVERLAY -->
 <div id="searchOverlay" class="search-overlay">
@@ -138,71 +158,10 @@
 
 
   <!-- FOOTER -->
-  <footer class="footer">
-  <div class="footer-container">
-
-    <!-- BRAND INFO -->
-    <div class="footer-col">
-      <h2 class="footer-logo">HYPERFIT</h2>
-      <p>
-        Premium performance wear designed for athletes and everyday champions.
-        Built for comfort. Styled for confidence.
-      </p>
-    </div>
-
-    <!-- NEWSLETTER -->
-    <div class="footer-col">
-      <h3>Subscribe to our Newsletter</h3>
-      <p>Get exclusive offers, new drops & updates.</p>
-
-      <form class="newsletter-form">
-        <input type="email" placeholder="Enter your email" required>
-        <button type="submit">Subscribe</button>
-      </form>
-    </div>
-    <!-- FLASH MESSAGES -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages %}
-        <div class="flash {{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endwith %}
-
-
-    <!-- PAGES -->
-    <div class="footer-col">
-      <h3>Pages</h3>
-      <ul>
-        <li><a href="#">About Us</a></li>
-        <li><a href="#">Contact Us</a></li>
-        <li><a href="#">Store Locator</a></li>
-        <li><a href="#">Track Order</a></li>
-        <li><a href="#">Careers</a></li>
-      </ul>
-    </div>
-
-    <!-- POLICIES -->
-    <div class="footer-col">
-      <h3>Policies</h3>
-      <ul>
-        <li><a href="#">Privacy Policy</a></li>
-        <li><a href="#">Terms & Conditions</a></li>
-        <li><a href="#">Return & Refund Policy</a></li>
-        <li><a href="#">Shipping Policy</a></li>
-        <li><a href="#">Cookie Policy</a></li>
-      </ul>
-    </div>
-
-  </div>
-
-  <!-- FOOTER BOTTOM -->
-  <div class="footer-bottom">
-    © 2024 HYPERFIT. All rights reserved.
-  </div>
-</footer>
-
+{% include "components/footer.html" %}
 
   <!-- JAVASCRIPT -->
-  <script src="{{ url_for('static', filename='js/category.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='js/category.js') }}"></script> -->
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 </body>

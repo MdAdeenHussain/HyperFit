@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+{% include "components/navbar.html" %}
+
+<section class="page-container">
+  <h2 class="page-title">Checkout</h2>
+
+  <form class="checkout-form" method="POST">
+
+    <label>Delivery Address</label>
+
+    <textarea name="address" required>{{ saved_address }}</textarea>
+
+    <small class="hint">
+      You can edit this address for this order only.
+    </small>
+
+    <h3>Payment Method</h3>
+
+    <label class="radio-box">
+      <input type="radio" name="payment_method" value="COD" required>
+      Cash on Delivery
+    </label>
+
+    <label class="radio-box">
+      <input type="radio" name="payment_method" value="UPI">
+      UPI
+    </label>
+
+    <label class="radio-box">
+      <input type="radio" name="payment_method" value="Card">
+      Credit / Debit Card
+    </label>
+
+    <div class="checkout-total">
+      <p>Total</p>
+      <h3>₹{{ total }}</h3>
+    </div>
+
+    <button class="btn-primary full">Place Order</button>
+  </form>
+</section>
+
+{% include "components/footer.html" %}
+</body>
+</html>

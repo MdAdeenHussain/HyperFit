@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, Newsletter,Product, User, OTP, Order
+from models import db, Newsletter,Product, User, OTP, Order, OrderItem
 import random
 from datetime import datetime, timezone, timedelta
 from functools import wraps
@@ -570,6 +570,39 @@ def toggle_product(product_id):
     db.session.commit()
     return redirect("/admin/products")
 
+# ---------------- ORDERS DETAIL ROUTE ----------------
+@app.route("/admin/orders")
+@login_required
+def admin_orders():
+    if not current_user.is_admin:
+        return redirect(url_for("home"))
+
+    orders = Order.query.order_by(Order.created_at.desc()).all()
+    return render_template("admin/orders.html", orders=orders)
+
+@app.route("/admin/orders/<int:order_id>")
+@login_required
+def admin_order_detail(order_id):
+    if not current_user.is_admin:
+        return redirect(url_for("home"))
+
+    order = Order.query.get_or_404(order_id)
+    return render_template("admin/order_detail.html", order=order)
+
+
+# ---------------- UPDATE ORDERS STATUS ROUTE ----------------
+@app.route("/admin/orders/<int:order_id>/status", methods=["POST"])
+@login_required
+def update_order_status(order_id):
+    if not current_user.is_admin:
+        return redirect(url_for("home"))
+
+    order = Order.query.get_or_404(order_id)
+    order.status = request.form.get("status")
+
+    db.session.commit()
+    return redirect(url_for("admin_order_detail", order_id=order.id))
+
 # ---------------- SHOP ROUTE ----------------
 @app.route("/shop")
 def shop():
@@ -596,6 +629,96 @@ def product_detail(product_id):
     product = Product.query.filter_by(id=product_id, is_active=True).first_or_404()
     return render_template("product_detail.html", product=product)
 
+# ---------------- CART ROUTE ----------------
+@app.route("/add-to-cart/<int:product_id>")
+def add_to_cart(product_id):
+
+    # 🔐 Redirect if not logged in
+    if not current_user.is_authenticated:
+        return redirect(url_for("login", next=request.url))
+
+    product = Product.query.get_or_404(product_id)
+
+    cart = session.get("cart", {})
+
+    if str(product.id) in cart:
+        cart[str(product.id)]["quantity"] += 1
+    else:
+        cart[str(product.id)] = {
+            "name": product.name,
+            "price": product.discounted_price or product.price,
+            "quantity": 1,
+            "image": product.image_filename
+        }
+
+    session["cart"] = cart
+    session.modified = True
+
+    return redirect(url_for("cart"))
+
+@app.route("/cart")
+@login_required
+def cart():
+    cart = session.get("cart", {})
+    total = sum(item["price"] * item["quantity"] for item in cart.values())
+    return render_template("cart.html", cart=cart, total=total)
+
+# ---------------- CHECKOUT ROUTE ----------------
+@app.route("/checkout", methods=["GET", "POST"])
+@login_required
+def checkout():
+    cart = session.get("cart", {})
+    if not cart:
+        return redirect(url_for("cart"))
+
+    total = sum(item["price"] * item["quantity"] for item in cart.values())
+
+    # 👇 Fetch saved address from user profile
+    saved_address = current_user.address or ""
+
+    if request.method == "POST":
+        payment_method = request.form.get("payment_method")
+
+        # 🚨 This address is ORDER-SPECIFIC
+        delivery_address = request.form.get("address")
+
+        order = Order(
+            user_id=current_user.id,
+            total_amount=total,
+            payment_method=payment_method,
+            address=delivery_address   # snapshot
+        )
+        db.session.add(order)
+        db.session.commit()
+
+        for pid, item in cart.items():
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=int(pid),
+                product_name=item["name"],
+                price=item["price"],
+                quantity=item["quantity"]
+            )
+            db.session.add(order_item)
+
+        db.session.commit()
+        session.pop("cart", None)
+
+        return redirect(url_for("order_success", order_id=order.id))
+
+    return render_template(
+        "checkout.html",
+        total=total,
+        saved_address=saved_address
+    )
+
+
+# ---------------- ORDER SUCCESS ROUTE ----------------
+@app.route("/order-success/<int:order_id>")
+@login_required
+def order_success(order_id):
+    order = Order.query.get_or_404(order_id)
+    return render_template("order_success.html", order=order)
 
 
 # ---------------- DEBUG ROUTE ----------------

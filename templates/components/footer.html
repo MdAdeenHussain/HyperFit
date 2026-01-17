@@ -1,0 +1,61 @@
+<footer class="footer">
+  <div class="footer-container">
+
+    <!-- BRAND INFO -->
+    <div class="footer-col">
+      <h2 class="footer-logo">HYPERFIT</h2>
+      <p>
+        Premium performance wear designed for athletes and everyday champions.
+        Built for comfort. Styled for confidence.
+      </p>
+    </div>
+
+    <!-- NEWSLETTER -->
+    <div class="footer-col">
+      <h3>Subscribe to our Newsletter</h3>
+      <p>Get exclusive offers, new drops & updates.</p>
+
+      <form class="newsletter-form">
+        <input type="email" placeholder="Enter your email" required>
+        <button type="submit">Subscribe</button>
+      </form>
+    </div>
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+
+    <!-- PAGES -->
+    <div class="footer-col">
+      <h3>Pages</h3>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">Store Locator</a></li>
+        <li><a href="#">Track Order</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+
+    <!-- POLICIES -->
+    <div class="footer-col">
+      <h3>Policies</h3>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms & Conditions</a></li>
+        <li><a href="#">Return & Refund Policy</a></li>
+        <li><a href="#">Shipping Policy</a></li>
+        <li><a href="#">Cookie Policy</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- FOOTER BOTTOM -->
+  <div class="footer-bottom">
+    © 2024 HYPERFIT. All rights reserved.
+  </div>
+</footer>

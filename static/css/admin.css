@@ -150,3 +150,35 @@ input, button {
   background: #ef4444;
   color: white;
 }
+
+/* ADMIN CARDS */
+.admin-card {
+  background: #f7f7f7;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-card h3 {
+  margin-bottom: 12px;
+}
+
+/* TABLE */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+/* STATUS FORM */
+.admin-card select {
+  padding: 10px;
+  border-radius: 8px;
+  margin-right: 10px;
+}

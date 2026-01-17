@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <title>Orders</title>
+</head>
+<body>
+    
+    <div class="admin-layout">
+
+    <aside class="admin-sidebar">
+        <h2>ADMIN</h2>
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/admin/users">Users</a>
+        <a href="/admin/products">Products</a>
+        <a href="/admin/orders" class="active">Orders</a>
+        <a href="/logout" class="logout">Logout</a>
+    </aside>
+
+        <main class="admin-main">
+            {% block content %}
+            <h2>Orders</h2>
+
+            <table class="admin-table">
+            <thead>
+                <tr>
+                <th>Order ID</th>
+                <th>User</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                <td>#{{ order.id }}</td>
+                <td>{{ order.user.email }}</td>
+                <td>₹{{ order.total_amount }}</td>
+                <td>{{ order.payment_method }}</td>
+                <td>{{ order.status }}</td>
+                <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
+                <td>
+                    <a href="{{ url_for('admin_order_detail', order_id=order.id) }}">
+                    View
+                    </a>
+                </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+            {% endblock %}
+        </main>
+    </div>
+</body>
+</html>
