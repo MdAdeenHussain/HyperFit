@@ -74,6 +74,7 @@ input, button {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
+  margin-bottom: 30px;
 }
 
 .card {
@@ -81,6 +82,8 @@ input, button {
   padding: 25px;
   border-radius: 10px;
   box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  text-align: center;
+  font-size: 14px;
 }
 
 .card h3 {
@@ -151,6 +154,11 @@ input, button {
   color: white;
 }
 
+.btn.warning {
+  background: #cf741e;
+  color: white;
+}
+
 /* ADMIN CARDS */
 .admin-card {
   background: #f7f7f7;
@@ -182,3 +190,4 @@ input, button {
   border-radius: 8px;
   margin-right: 10px;
 }
+

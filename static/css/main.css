@@ -676,9 +676,6 @@ body {
   font-size: 13px;
 }
 
-.status.placed { background: #ffeeba; }
-.status.shipped { background: #bee5eb; }
-.status.delivered { background: #c3e6cb; }
 
 /* SIZE CHART */
 /* SIZE CHART MODAL */

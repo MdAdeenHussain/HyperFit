@@ -32,7 +32,11 @@
                 <th>Payment</th>
                 <th>Status</th>
                 <th>Date</th>
+                <th>Cancel</th>
+                <th>Return</th>
                 <th>Action</th>
+                <th>Cancellation</th>
+                <th>Returning</th>
                 </tr>
             </thead>
 
@@ -46,12 +50,37 @@
                 <td>{{ order.status }}</td>
                 <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
                 <td>
+                    {% if order.cancel_requested %}
+                    <span class="badge red">Cancel Requested</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if order.return_requested %}
+                    <span class="badge orange">Return Requested</span>
+                    {% endif %}
+                </td>
+                <td>
                     <a href="{{ url_for('admin_order_detail', order_id=order.id) }}">
                     <button class="btn">View</button>
                     </a>
                 </td>
+                <td>
+                    {% if order.cancel_requested %}
+                    <form method="POST" action="{{ url_for('approve_cancel', order_id=order.id) }}">
+                    <button class="btn danger">Approve Cancel</button>
+                    </form>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if order.return_requested %}
+                    <form method="POST" action="{{ url_for('approve_return', order_id=order.id) }}">
+                    <button class="btn warning">Approve Return</button>
+                    </form>
+                    {% endif %}
+                </td>
                 </tr>
                 {% endfor %}
+
             </tbody>
             </table>
             {% endblock %}

@@ -7,6 +7,7 @@ db = SQLAlchemy()
 class Newsletter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    subscribed_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Product(db.Model):
     __tablename__="product"
@@ -46,15 +47,27 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
 
+class PasswordResetToken(db.Model):
+    __tablename__ = "password_reset_tokens"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+
+    user = db.relationship("User", backref="password_reset_tokens")
+
 class OTP(db.Model):
     __tablename__="otp"
     id = db.Column(db.Integer, primary_key=True)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    otp_type = db.Column(db.String(10), nullable=False)  # email / phone
     otp_code = db.Column(db.String(6), nullable=False)
-    otp_type = db.Column(db.String(10))  # 'email' or 'phone'
+    contact = db.Column(db.String(120), nullable=False)  # email or phone
 
     expires_at = db.Column(db.DateTime, nullable=False)
+    verified = db.Column(db.Boolean, default=False)
 
     user = db.relationship("User", backref="otps")
 
@@ -71,6 +84,28 @@ class Order(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user = db.relationship("User", backref="orders", lazy=True)
     items = db.relationship("OrderItem", backref="order", lazy=True)
+
+    razorpay_order_id = db.Column(db.String(100))
+    razorpay_payment_id = db.Column(db.String(100))
+    razorpay_signature = db.Column(db.String(200))
+    payment_status = db.Column(db.String(30), default="pending")
+
+
+    invoice_file = db.Column(db.String(200))
+
+    cancel_requested = db.Column(db.Boolean, default=False)
+    cancel_reason = db.Column(db.Text)
+
+    return_requested = db.Column(db.Boolean, default=False)
+    return_reason = db.Column(db.Text)
+
+    returned_at = db.Column(db.DateTime)
+
+    refund_status = db.Column(db.String(20))  # pending, processed
+    refund_amount = db.Column(db.Float)
+    refund_method = db.Column(db.String(30))  # card, upi, wallet, bank
+    refunded_at = db.Column(db.DateTime)
+
 
 class ProductSize(db.Model):
     id = db.Column(db.Integer, primary_key=True)

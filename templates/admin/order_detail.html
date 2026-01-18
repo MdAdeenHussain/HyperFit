@@ -84,6 +84,38 @@
       <button class="btn-primary">Update</button>
     </form>
   </div>
+  <!-- REFUND STATUS -->
+  {% if order.refund_status %}
+  <div class="admin-card">
+    <h3>Refund Details</h3>
+    <p><strong>Status:</strong> {{ order.refund_status|capitalize }}</p>
+    <p><strong>Amount:</strong> ₹{{ order.refund_amount }}</p>
+    <p><strong>Method:</strong> {{ order.refund_method|upper }}</p>
+
+    {% if order.refund_status == "pending" %}
+    <form method="POST"
+          action="{{ url_for('process_refund_admin', order_id=order.id) }}">
+      <button class="btn-danger">
+        Process Refund
+      </button>
+    </form>
+    {% endif %}
+
+    {% if order.refund_status == "pending" %}
+    <form method="POST" action="{{ url_for('mark_refund_processed', order_id=order.id) }}">
+      <button class="btn-success">Mark Refund Processed</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+  <!-- DOWNLOAD INVOICE -->
+  {% if order.invoice_file %}
+  <a href="{{ url_for('static', filename='invoices/' ~ order.invoice_file) }}"
+    class="btn-primary"
+    target="_blank">
+    Download Invoice
+  </a>
+  {% endif %}
 
 </section>
 

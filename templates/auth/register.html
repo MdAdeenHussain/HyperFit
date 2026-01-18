@@ -26,8 +26,14 @@
     <textarea name="address" placeholder="Full Address" required></textarea>
 
     <input type="tel" name="phone" placeholder="Phone Number" required>
+    <button type="button" onclick="sendOtp('phone')">Send Phone OTP</button>
+    <input type="text" id="phoneOtp" placeholder="Enter Phone OTP">
+    <button type="button" onclick="verifyOtp('phone')">Verify</button>
 
     <input type="email" name="email" placeholder="Email Address" required>
+    <button type="button" onclick="sendOtp('email')">Send Email OTP</button>
+    <input type="text" id="emailOtp" placeholder="Enter Email OTP">
+    <button type="button" onclick="verifyOtp('email')">Verify</button>
 
     <input type="password" name="password" placeholder="Password" required>
 
@@ -43,5 +49,32 @@
 </div>
 
 {% include "components/footer.html" %}
+  <script>
+    function sendOtp(type) {
+      const contact = document.getElementById(type).value;
+
+      fetch("/send-otp", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ contact, type })
+      }).then(() => alert("OTP sent"));
+    }
+
+    function verifyOtp(type) {
+      const contact = document.getElementById(type).value;
+      const otp = document.getElementById(type + "Otp").value;
+
+      fetch("/verify-otp", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ contact, otp, type })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.verified ? "Verified" : "Invalid OTP");
+      });
+    }
+  </script>
+
 </body>
 </html>

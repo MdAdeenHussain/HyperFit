@@ -43,7 +43,15 @@
       </div>
 
       <div class="card">
-        Total Revenue<br><strong>₹{{ total_income }}</strong>
+        Total Revenue<br><strong>₹{{ total_revenue }}</strong>
+      </div>
+
+      <div class="card">
+        Net Revenue<br><strong>₹{{ net_revenue }}</strong>
+      </div>
+
+      <div class="card">
+        Refunds<br><strong>₹{{ refund_amount }}</strong>
       </div>
 
       <div class="card">
@@ -51,15 +59,17 @@
       </div>
 
       <div class="card">
-        Returns<br><strong>{{ total_returns }}</strong>
+        Cancelled<br><strong>{{ cancelled_orders }}</strong>
+      </div>
+
+      <div class="card">
+        Returns<br><strong>{{ returned_orders }}</strong>
       </div>
     </div>
 
-    <div style="max-width: 900px; margin-top: 40px;">
-      <canvas id="revenueChart"
-      data-labels='{{ labels | tojson }}'
-      data-values='{{ values | tojson }}'></canvas>
-    </div>
+    <canvas id="ordersChart"></canvas>
+    <canvas id="revenueChart"></canvas>
+    <canvas id="paymentChart"></canvas>
 
   </main>
 
@@ -68,6 +78,94 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+const ordersLabels = {{ orders_by_day | map(attribute=0) | list | tojson }};
+const ordersValues = {{ orders_by_day | map(attribute=1) | list | tojson }};
+
+new Chart(document.getElementById("ordersChart"), {
+  type: "line",
+  data: {
+    labels: ordersLabels,
+    datasets: [{
+      label: "Orders",
+      data: ordersValues,
+      borderWidth: 2
+    }]
+  }
+});
+</script>
+
+<script>
+const revenueLabels = {{ revenue_by_day | map(attribute=0) | list | tojson }};
+const revenueValues = {{ revenue_by_day | map(attribute=1) | list | tojson }};
+
+new Chart(document.getElementById("revenueChart"), {
+  type: "bar",
+  data: {
+    labels: revenueLabels,
+    datasets: [{
+      label: "Revenue",
+      data: revenueValues
+    }]
+  }
+});
+</script>
+
+<script>
+const paymentLabels = {{ payment_split | map(attribute=0) | list | tojson }};
+const paymentValues = {{ payment_split | map(attribute=1) | list | tojson }};
+
+new Chart(document.getElementById("paymentChart"), {
+  type: "doughnut",
+  data: {
+    labels: paymentLabels,
+    datasets: [{
+      data: paymentValues
+    }]
+  }
+});
+</script>
+
+<!-- <script>
+  const ordersData = {
+    labels: {{ orders_by_day | map(attribute=0) | list | tojson }},
+    datasets: [{
+      label: "Orders",
+      data: {{ orders_by_day | map(attribute=1) | list | tojson }},
+      borderWidth: 2
+    }]
+  };
+
+  new Chart(document.getElementById("ordersChart"), {
+    type: "line",
+    data: ordersData
+  });
+
+
+  new Chart(document.getElementById("revenueChart"), {
+    type: "bar",
+    data: {
+      labels: {{ revenue_by_day | map(attribute=0) | list | tojson }},
+      datasets: [{
+        label: "Revenue",
+        data: {{ revenue_by_day | map(attribute=1) | list | tojson }},
+      }]
+    }
+  });
+
+
+  new Chart(document.getElementById("paymentChart"), {
+    type: "doughnut",
+    data: {
+      labels: {{ payment_split | map(attribute=0) | list | tojson }},
+      datasets: [{
+        data: {{ payment_split | map(attribute=1) | list | tojson }},
+      }]
+    }
+  });
+</script> -->
+
+
+<!-- <script>
   const canvas = document.getElementById("revenueChart");
   const ctx = canvas.getContext("2d");
 
@@ -92,7 +190,7 @@
       }
     }
   });
-</script>
+</script> -->
 
 
 </body>

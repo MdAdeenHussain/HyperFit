@@ -77,3 +77,10 @@ button[type="submit"] {
   padding: 12px;
   cursor: pointer;
 }
+
+.status.placed { color: blue; }
+.status.processing { color: green; }
+.status.shipped { color: orange; }
+.status.delivered { color: green; }
+.status.cancelled { color: red; }
+.status.returned { color: purple; }

@@ -61,6 +61,20 @@
               </p>
             {% endif %}
 
+            {% if order.refund_status %}
+            <p>
+              <strong>Refund:</strong>
+              {{ order.refund_status|capitalize }}
+              (₹{{ order.refund_amount }} via {{ order.refund_method|upper }})
+            </p>
+            {% endif %}
+
+            {% if order.refund_status == "processed" %}
+            <p class="muted">
+              Refunded on {{ order.refunded_at.strftime("%d %b %Y") }}
+            </p>
+            {% endif %}
+
             <!-- PRODUCTS -->
             <div class="order-products-scroll">
               {% for item in order.items %}
@@ -77,8 +91,40 @@
                     <p>Qty: {{ item.quantity }}</p>
                     <p class="price">₹{{ item.price * item.quantity }}</p>
                   </div>
-
                 </a>
+                
+                {% if order.refund_status %}
+                <p>
+                  <strong>Refund:</strong>
+                  {{ order.refund_status|capitalize }}
+                  {% if order.refund_status == "processed" %}
+                    (₹{{ order.refund_amount }})
+                  {% endif %}
+                </p>
+                {% endif %}
+
+                {% if order.invoice_file %}
+                <a href="{{ url_for('static', filename='invoices/' ~ order.invoice_file) }}"
+                  class="btn-outline"
+                  target="_blank">
+                  Download Invoice
+                </a>
+                {% endif %}
+
+                {% if order.status in ["placed", "confirmed"] and not order.cancel_requested %}
+                  <form method="POST" action="{{ url_for('request_cancel', order_id=order.id) }}">
+                    <textarea name="reason" required placeholder="Reason for cancellation"></textarea>
+                    <button class="btn-danger">Request Cancel</button>
+                  </form>
+                {% endif %}
+
+                {% if order.status == "delivered" and not order.return_requested %}
+                  <form method="POST" action="{{ url_for('request_return', order_id=order.id) }}">
+                    <textarea name="reason" required placeholder="Reason for return"></textarea>
+                    <button class="btn-warning">Request Return</button>
+                  </form>
+                {% endif %}
+
               {% endfor %}
             </div>
 

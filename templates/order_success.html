@@ -15,6 +15,9 @@
       <p><strong>Order ID:</strong> {{ order.id }}</p>
       <p><strong>Payment Mode:</strong> {{ order.payment_method }}</p>
       <p><strong>Total Paid:</strong> ₹{{ order.total_amount }}</p>
+      <p><strong>Payment:</strong> {{ order.payment_method | upper }}</p>
+      <p><strong>Status:</strong> {{ order.payment_status | capitalize }}</p>
+
 
       <a href="/" class="btn-primary">Continue Shopping</a>
     </div>
