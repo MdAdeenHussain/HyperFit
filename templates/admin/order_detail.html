@@ -22,9 +22,9 @@
   <!-- CUSTOMER INFO -->
   <div class="admin-card">
     <h3>Customer Details</h3>
-    <p><strong>Name:</strong> {{ user.name }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Phone:</strong> {{ user.phone }}</p>
+    <p><strong>Name:</strong> {{ order.user.name }}</p>
+    <p><strong>Email:</strong> {{ order.user.email }}</p>
+    <p><strong>Phone:</strong> {{ order.user.phone }}</p>
   </div>
 
   <!-- DELIVERY ADDRESS -->
@@ -41,8 +41,9 @@
       <thead>
         <tr>
           <th>Product</th>
-          <th>Price</th>
+          <th>Size</th>
           <th>Qty</th>
+          <th>Price</th>
           <th>Subtotal</th>
         </tr>
       </thead>
@@ -50,8 +51,9 @@
         {% for item in order.items %}
         <tr>
           <td>{{ item.product_name }}</td>
-          <td>₹{{ item.price }}</td>
+          <td>{{ item.size }}</td>
           <td>{{ item.quantity }}</td>
+          <td>₹{{ item.price }}</td>
           <td>₹{{ item.price * item.quantity }}</td>
         </tr>
         {% endfor %}
@@ -71,6 +73,13 @@
         <option {% if order.status == "Delivered" %}selected{% endif %}>Delivered</option>
         <option {% if order.status == "Cancelled" %}selected{% endif %}>Cancelled</option>
       </select>
+
+      <label>Tracking ID</label>
+      <input type="text" name="tracking_id" value="{{ order.tracking_id or '' }}">
+
+      <label>Expected Delivery Date</label>
+      <input type="date" name="expected_delivery"
+            value="{{ order.expected_delivery if order.expected_delivery }}">
 
       <button class="btn-primary">Update</button>
     </form>

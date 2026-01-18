@@ -38,9 +38,58 @@
 
     <!-- ORDERS -->
     <div id="orders" class="section">
-      <h3>Orders</h3>
-      <p>No orders yet.</p>
+      <h3>My Orders</h3>
+
+      {% if user.orders %}
+        {% for order in user.orders %}
+
+          <div class="order-card">
+
+            <h4>Order #{{ order.id }}</h4>
+
+            <p><strong>Status:</strong> {{ order.status|capitalize }}</p>
+            <p><strong>Total:</strong> ₹{{ order.total_amount }}</p>
+            <p><strong>Payment:</strong> {{ order.payment_method }}</p>
+
+            {% if order.tracking_id %}
+              <p><strong>Tracking ID:</strong> {{ order.tracking_id }}</p>
+            {% endif %}
+
+            {% if order.expected_delivery %}
+              <p><strong>Expected Delivery:</strong>
+                {{ order.expected_delivery.strftime("%d %b %Y") }}
+              </p>
+            {% endif %}
+
+            <!-- PRODUCTS -->
+            <div class="order-products-scroll">
+              {% for item in order.items %}
+                <a href="{{ url_for('product_detail', product_id=item.product_id) }}"
+                  class="order-product-card">
+
+                  <div class="order-product-img">
+                    <img src="{{ url_for('static', filename='images/' ~ item.product.image_filename) }}">
+                  </div>
+
+                  <div class="order-product-info">
+                    <h5>{{ item.product_name }}</h5>
+                    <p>Size: {{ item.size }}</p>
+                    <p>Qty: {{ item.quantity }}</p>
+                    <p class="price">₹{{ item.price * item.quantity }}</p>
+                  </div>
+
+                </a>
+              {% endfor %}
+            </div>
+
+          </div>
+
+        {% endfor %}
+      {% else %}
+        <p>No orders yet.</p>
+      {% endif %}
     </div>
+
 
     <!-- EDIT PROFILE -->
     <div id="edit-profile" class="section">

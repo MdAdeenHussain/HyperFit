@@ -9,6 +9,7 @@ class Newsletter(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
 
 class Product(db.Model):
+    __tablename__="product"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
     category = db.Column(db.String(50), nullable=False)
@@ -17,6 +18,9 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     discount_percent = db.Column(db.Float, default=0)
     discounted_price = db.Column(db.Float)
+    is_compression = db.Column(db.Boolean, default=False)
+    is_new_arrival = db.Column(db.Boolean, default=False)
+    is_on_sale = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text)
     image_filename = db.Column(db.String(200), nullable=False)
 
@@ -43,9 +47,10 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
 
 class OTP(db.Model):
+    __tablename__="otp"
     id = db.Column(db.Integer, primary_key=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     otp_code = db.Column(db.String(6), nullable=False)
     otp_type = db.Column(db.String(10))  # 'email' or 'phone'
 
@@ -60,22 +65,43 @@ class Order(db.Model):
     address = db.Column(db.Text, nullable=False)
     total_amount = db.Column(db.Float)
     payment_method = db.Column(db.String(50), nullable=False)
-    status = db.Column(db.String(30), default="placed")  # placed, delivered, returned
+    status = db.Column(db.String(30), default="placed")  # placed, shipped, delivered, returned
+    tracking_id = db.Column(db.String(100), nullable=True)
+    expected_delivery = db.Column(db.Date, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user = db.relationship("User", backref="orders", lazy=True)
     items = db.relationship("OrderItem", backref="order", lazy=True)
+
+class ProductSize(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"))
+    size = db.Column(db.String(10))
+    stock = db.Column(db.Integer)
+
+    product = db.relationship("Product", backref="sizes")
 
 class OrderItem(db.Model):
     __tablename__="order_items"
     id = db.Column(db.Integer, primary_key=True)
 
-    order_id = db.Column(db.Integer, db.ForeignKey("order.id"), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
 
     product_name = db.Column(db.String(200))
     price = db.Column(db.Float)
+    size=db.Column(db.String(10))
     quantity = db.Column(db.Integer)
 
     product = db.relationship("Product")
 
+class CartItem(db.Model):
+    __tablename__="cart_items"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"))
+    quantity = db.Column(db.Integer, default=1)
+    size = db.Column(db.String(10))
+
+    product = db.relationship("Product")
+    user = db.relationship("User", backref="cart_items")
 

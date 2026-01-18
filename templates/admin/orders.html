@@ -47,7 +47,7 @@
                 <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
                 <td>
                     <a href="{{ url_for('admin_order_detail', order_id=order.id) }}">
-                    View
+                    <button class="btn">View</button>
                     </a>
                 </td>
                 </tr>

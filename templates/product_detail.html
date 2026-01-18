@@ -51,7 +51,12 @@
       {% endif %}
 
       <p class="meta">
-        Category: <strong>{{ product.category }}</strong>
+        Category: <strong>
+          {{ product.category | upper }}
+          {% if product.sub_category %}
+            | {{ product.sub_category }}
+          {% endif %}
+        </strong>
       </p>
 
       <p class="meta">
@@ -62,17 +67,141 @@
       <p class="meta">
         {{ product.description }}
       </p>
+      
+      <form method="POST" action="{{ url_for('add_to_cart', product_id=product.id) }}" class="product-form">
 
-      <a href="{{ url_for('add_to_cart', product_id=product.id) }}"
-       class="btn-primary add-cart-btn">
-       Add to Cart
-    </a>
+        <!-- SIZE -->
+        <label class="label"><h3>Select Size</h3></label>
+        <div class="size-options">
+          {% for size in ["S","M","L","XL"] %}
+            <label>
+              <input type="radio" name="size" value="{{ size }}" required>
+              <span>{{ size }}</span>
+            </label>
+          {% endfor %}
+          <button type="button" class="size-chart-btn" onclick="openSizeChart('{{ product.category }}', '{{ product.sub_category }}')">Size Chart</button>
+        </div>
 
+        <!-- QUANTITY -->
+        <label class="label"><h3>Quantity</h3></label>
+        <input type="number" name="quantity" min="1" value="1" required>
+
+        <button type="submit" class="btn-primary add-cart-btn">
+        Add to Cart
+        </button>
+      </form>
     </div>
-
   </div>
+
+  <!-- SIZE CHART MODAL -->
+<div id="sizeChartModal" class="size-chart-modal">
+  <div class="size-chart-content">
+    <span class="close-btn" onclick="closeSizeChart()">×</span>
+
+    <h3 id="sizeChartTitle">Size Chart</h3>
+
+    <div id="sizeChartTable"></div>
+  </div>
+</div>
+
 
 </main>
 {% include "components/footer.html" %}
+<script>
+    function openSizeChart(category, subCategory) {
+      const modal = document.getElementById("sizeChartModal");
+      const tableDiv = document.getElementById("sizeChartTable");
+      const title = document.getElementById("sizeChartTitle");
+
+      category = category.toLowerCase();
+      subCategory = (subCategory || "").toLowerCase();
+
+      let tableHTML = "";
+
+      // MEN SIZE CHARTS
+      if (category === "men") {
+        title.innerText = "MEN | " + subCategory;
+
+        if (subCategory.includes("t-shirt") || subCategory.includes("stringer")) {
+          tableHTML = `
+            <table>
+              <tr><th>Size</th><th>Chest (in)</th><th>Length (in)</th></tr>
+              <tr><td>S</td><td>36</td><td>26</td></tr>
+              <tr><td>M</td><td>38</td><td>27</td></tr>
+              <tr><td>L</td><td>40</td><td>28</td></tr>
+              <tr><td>XL</td><td>42</td><td>29</td></tr>
+            </table>`;
+        } 
+        else if (subCategory.includes("jogger")) {
+          tableHTML = `
+            <table>
+              <tr><th>Size</th><th>Waist (in)</th><th>Length (in)</th></tr>
+              <tr><td>S</td><td>28–30</td><td>38</td></tr>
+              <tr><td>M</td><td>32–34</td><td>39</td></tr>
+              <tr><td>L</td><td>36–38</td><td>40</td></tr>
+              <tr><td>XL</td><td>38–40</td><td>41</td></tr>
+            </table>`;
+        }
+        else if (subCategory.includes("hoodie")) {
+          tableHTML = `
+            <table>
+              <tr><th>Size</th><th>Chest</th><th>Length</th></tr>
+              <tr><td>M</td><td>40</td><td>27</td></tr>
+              <tr><td>L</td><td>42</td><td>28</td></tr>
+              <tr><td>XL</td><td>44</td><td>29</td></tr>
+            </table>`;
+        }
+      }
+
+      // WOMEN SIZE CHARTS
+      if (category === "women") {
+        title.innerText = "WOMEN | " + subCategory;
+
+        if (subCategory.includes("sports bra")) {
+          tableHTML = `
+            <table>
+              <tr><th>Size</th><th>Bust (in)</th></tr>
+              <tr><td>S</td><td>32–34</td></tr>
+              <tr><td>M</td><td>34–36</td></tr>
+              <tr><td>L</td><td>36–38</td></tr>
+              <tr><td>XL</td><td>38–40</td></tr>
+            </table>`;
+        }
+        else if (subCategory.includes("leggings")) {
+          tableHTML = `
+            <table>
+              <tr><th>Size</th><th>Waist</th><th>Length</th></tr>
+              <tr><td>S</td><td>26–28</td><td>36</td></tr>
+              <tr><td>M</td><td>28–30</td><td>37</td></tr>
+              <tr><td>L</td><td>30–32</td><td>38</td></tr>
+              <tr><td>XL</td><td>32–34</td><td>39</td></tr>
+            </table>`;
+        }
+        else if (subCategory.includes("tops") || subCategory.includes("hoodie")) {
+          tableHTML = `
+            <table>
+              <tr><th>Size</th><th>Bust</th><th>Length</th></tr>
+              <tr><td>S</td><td>34</td><td>24</td></tr>
+              <tr><td>M</td><td>36</td><td>25</td></tr>
+              <tr><td>L</td><td>38</td><td>26</td></tr>
+              <tr><td>XL</td><td>40</td><td>27</td></tr>
+            </table>`;
+        }
+      }
+
+      tableDiv.innerHTML = tableHTML;
+      modal.classList.add("active");
+    }
+
+    function closeSizeChart() {
+      document.getElementById("sizeChartModal").classList.remove("active");
+    }
+
+    // Close when clicking outside
+    document.getElementById("sizeChartModal").addEventListener("click", function(e) {
+      if (e.target === this) closeSizeChart();
+    });
+</script>
+
 </body>
 </html>

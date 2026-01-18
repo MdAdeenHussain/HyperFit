@@ -39,7 +39,6 @@
     {% if items %}
     <div id="men-{{ subcat|lower|replace(' ', '-') }}" class="sub-section">
       <h3 class="sub-title">MEN | {{ subcat }}</h3>
-
       <div class="product-scroll">
         {% for product in items %}
           <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card">
@@ -51,6 +50,9 @@
                 <span class="old">₹{{ product.price }}</span>
                 <span class="new">₹{{ product.discounted_price }}</span>
               </p>
+              <span class="discount-badge">
+                  {{ product.discount_percent }}% OFF
+              </span>
             {% else %}
               <p class="price">₹{{ product.price }}</p>
             {% endif %}
@@ -70,7 +72,6 @@
       {% if items %}
       <div id="women-{{ subcat|lower|replace(' ', '-') }}" class="sub-section">
         <h3 class="sub-title">WOMEN | {{ subcat }}</h3>
-
         <div class="product-scroll">
           {% for product in items %}
             <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card">
@@ -82,6 +83,9 @@
                   <span class="old">₹{{ product.price }}</span>
                   <span class="new">₹{{ product.discounted_price }}</span>
                 </p>
+                <span class="discount-badge">
+                  {{ product.discount_percent }}% OFF
+                </span>
               {% else %}
                 <p class="price">₹{{ product.price }}</p>
               {% endif %}
@@ -114,6 +118,9 @@
               <span class="old">₹{{ product.price }}</span>
               <span class="new">₹{{ product.discounted_price }}</span>
             </p>
+            <span class="discount-badge">
+                {{ product.discount_percent }}% OFF
+            </span>
           {% else %}
             <p class="price">₹{{ product.price }}</p>
           {% endif %}

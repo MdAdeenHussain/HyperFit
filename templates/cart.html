@@ -9,26 +9,84 @@
 {% include "components/navbar.html" %}
 
   <section class="page-container">
-  <h2 class="page-title">Your Cart</h2>
+    <h2 class="page-title">Your Cart</h2>
 
-  <div class="cart-list">
-    {% for id, item in cart.items() %}
-    <div class="cart-card">
-      <img src="{{ url_for('static', filename='images/' ~ item.image) }}">
-      <div class="cart-info">
-        <p class="cart-name">{{ item.name }}</p>
-        <p class="cart-price">₹{{ item.price }} × {{ item.quantity }}</p>
+    <div class="cart-list">
+
+      {% for item in cart_items %}
+      <div class="cart-card">
+
+        <!-- IMAGE -->
+        <a href="{{ url_for('product_detail', product_id=item.product.id) }}">
+          <img src="{{ url_for('static', filename='images/' ~ item.product.image_filename) }}">
+        </a>
+
+        <!-- INFO -->
+        <div class="cart-info">
+          <h4>{{ item.product.name }}</h4>
+          <p class="meta">
+            Category: {{ item.product.category }} |
+            Size: {{ item.size }}
+          </p>
+
+          <!-- PRICE -->
+          {% if item.product.discounted_price %}
+            <p class="price">
+              <span class="old-price">₹{{ item.product.price }}</span>
+              <span class="new-price">₹{{ item.product.discounted_price }}</span>
+              <span class="discount">({{ item.product.discount_percent }}% OFF)</span>
+            </p>
+          {% else %}
+            <p class="price">₹{{ item.product.price }}</p>
+          {% endif %}
+          
+          <!-- SIZE -->
+          <form method="POST" action="{{ url_for('update_cart', item_id=item.id) }}">
+            <select name="size">
+              {% for s in ["S","M","L","XL"] %}
+                <option value="{{ s }}" {% if s == item.size %}selected{% endif %}>
+                  {{ s }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+
+          <!-- QUANTITY -->
+          <form method="POST" action="{{ url_for('update_cart', item_id=item.id) }}">
+            <input type="number" name="quantity" value="{{ item.quantity }}" min="1">
+            <button type="submit" class="size-chart-btn">Update</button>
+          </form>
+
+          <!-- REMOVE -->
+          <a href="{{ url_for('remove_from_cart', item_id=item.id) }}" class="remove">
+            <button class="size-chart-btn">Remove</button>
+          </a>
+        </div>
       </div>
-    </div>
-    {% endfor %}
-  </div>
+      {% endfor %}
 
-  <div class="cart-summary">
-    <p>Total</p>
-    <h3>₹{{ total }}</h3>
-    <a href="/checkout" class="btn-primary full">Checkout</a>
-  </div>
-</section>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="cart-summary">
+      <p>Subtotal: ₹{{ subtotal }}</p>
+
+      <p>
+        Delivery:
+        {% if delivery_charge > 0 %}
+          ₹{{ delivery_charge }}
+        {% else %}
+          <span class="free">FREE</span>
+        {% endif %}
+      </p>
+
+      <h3>Total: ₹{{ total }}</h3>
+
+      <a href="{{ url_for('checkout')}}" class="btn-primary full">Checkout</a>
+    </div>
+
+  </section>
+
 
   {% include "components/footer.html" %}
 </body>

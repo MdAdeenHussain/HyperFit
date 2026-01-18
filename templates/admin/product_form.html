@@ -24,17 +24,6 @@
       <input name="name" placeholder="Product Name"
              value="{{ product.name if product else '' }}" required>
 
-      <!-- <select name="category" required>
-        <option value="">Select Category</option>
-
-        {% for c in ["Men", "Women", "Compression", "New Arrivals", "Sale", "Accessories"] %}
-          <option value="{{ c }}"
-            {% if product and product.category == c %}selected{% endif %}>
-            {{ c }}
-          </option>
-        {% endfor %}
-      </select> -->
-
       <h3>Primary Category</h3>
 
       <label><input type="radio" name="category" value="Men" required> Men</label>

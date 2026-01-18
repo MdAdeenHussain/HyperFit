@@ -17,55 +17,45 @@
 
 <main class="shop-container">
 
-  <h1 class="shop-title">{{ category }}</h1>
+  {% for group, items in grouped_products.items() %}
+    <section class="category-section">
+        <h2 class="category-title">{{ group }}</h2>
 
-  {% if products %}
-  <div class="shop-grid">
+        <div class="product-grid">
+            {% for product in items %}
+            <div class="product-card">
 
-    {% for product in products %}
-    <div class="product-card">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}">
+                    <img src="{{ url_for('static', filename='images/' + product.image_filename) }}">
+                </a>
 
-      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="image-wrap">
-        {% set image_path = 'images/' ~ product.image_filename %}
-        <img
-          src="{{ url_for('static', filename=image_path) }}"
-          alt="{{ product.name }}"
-          loading="lazy"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/HyperFitlogo.jpeg') }}'"
-        >
+                {% if product.discounted_price %}
+                <span class="discount-badge">
+                    {{ product.discount_percent }}% OFF
+                </span>
+                {% endif %}
 
-        {% if product.discounted_price %}
-          <span class="discount-badge">
-            -{{ product.discount_percent }}%
-          </span>
-        {% endif %}
-      </a>
+                <h3>{{ product.name }}</h3>
 
-      <div class="product-info">
-        <h3>{{ product.name }}</h3>
+                {% if product.discounted_price %}
+                    <p class="price">
+                        <span class="old-price">₹{{ product.price }}</span>
+                        <span class="new-price">₹{{ product.discounted_price }}</span>
+                    </p>
+                {% else %}
+                    <p class="price">₹{{ product.price }}</p>
+                {% endif %}
 
-        {% if product.discounted_price %}
-          <p class="price">
-            <span class="old-price">₹{{ product.price }}</span>
-            <span class="new-price">₹{{ product.discounted_price }}</span>
-          </p>
-        {% else %}
-          <p class="price">₹{{ product.price }}</p>
-        {% endif %}
-
-        <a href="{{ url_for('product_detail', product_id=product.id) }}"
-           class="view-btn">
-          View Product
-        </a>
-      </div>
-
-    </div>
+                <a href="{{ url_for('product_detail', product_id=product.id) }}"
+                  class="btn-primary">
+                  View Product
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
     {% endfor %}
 
-  </div>
-  {% else %}
-    <p class="empty-text">No products found.</p>
-  {% endif %}
 
 </main>
 

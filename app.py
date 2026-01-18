@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, Newsletter,Product, User, OTP, Order, OrderItem
+from models import db, Newsletter,Product, User, OTP, Order, OrderItem, CartItem
 import random
 from datetime import datetime, timezone, timedelta
 from functools import wraps
@@ -517,6 +517,12 @@ def add_product():
             description=request.form["description"],
             image_filename=request.form["image_filename"]
         )
+        product.category = category
+        product.sub_category = sub_category
+        product.is_compression = "Compression" in tags
+        product.is_new_arrival = "New Arrival" in tags
+        product.is_on_sale = "Sale" in tags
+
         db.session.add(product)
         db.session.commit()
         return redirect("/admin/products")
@@ -534,7 +540,11 @@ def edit_product(product_id):
         product.name = request.form["name"]
         product.category = request.form["category"]
         product.sub_category = request.form["sub_category"]
+        tags = request.form.getlist("tags")
         product.tags = ",".join(request.form.getlist("tags"))
+        product.is_compression = "Compression" in tags
+        product.is_new_arrival = "New Arrival" in tags
+        product.is_on_sale = "Sale" in tags
         product.price = safe_float(request.form["price"])
         product.discount_percent = safe_float(request.form.get("discount_percent", 0))
         if "Sale" in request.form.getlist("tags"):
@@ -587,7 +597,7 @@ def admin_order_detail(order_id):
         return redirect(url_for("home"))
 
     order = Order.query.get_or_404(order_id)
-    return render_template("admin/order_detail.html", order=order)
+    return render_template("admin/order_detail.html", order=order, user=order.user)
 
 
 # ---------------- UPDATE ORDERS STATUS ROUTE ----------------
@@ -599,6 +609,13 @@ def update_order_status(order_id):
 
     order = Order.query.get_or_404(order_id)
     order.status = request.form.get("status")
+    order.tracking_id = request.form.get("tracking_id") or None
+
+    expected = request.form.get("expected_delivery")
+    order.expected_delivery = (
+        datetime.strptime(expected, "%Y-%m-%d").date()
+        if expected else None
+    )
 
     db.session.commit()
     return redirect(url_for("admin_order_detail", order_id=order.id))
@@ -607,21 +624,32 @@ def update_order_status(order_id):
 @app.route("/shop")
 def shop():
     category = request.args.get("category")
-    gender = request.args.get("gender")
-    sub = request.args.get("sub")
 
     query = Product.query.filter_by(is_active=True)
 
-    if gender:
-        query = query.filter_by(primary_category=gender)
+    # NAVBAR CATEGORY FILTER
+    if category == "New Arrivals":
+        query = query.filter_by(is_new_arrival=True)
 
-    if sub:
-        query = query.filter_by(sub_category=sub)
+    elif category == "Sale":
+        query = query.filter_by(is_on_sale=True)
 
-    products = query.all()
+    elif category in ["Men", "Women", "Accessories", "Compression"]:
+        query = query.filter_by(category=category)
 
-    return render_template("shop.html", products=products, category=category)
+    products = query.order_by(Product.sub_category).all()
 
+    # GROUP PRODUCTS: MEN | Joggers style
+    grouped_products = {}
+    for product in products:
+        key = f"{product.category} | {product.sub_category}"
+        grouped_products.setdefault(key, []).append(product)
+
+    return render_template(
+        "shop.html",
+        grouped_products=grouped_products,
+        selected_category=category
+    )
 
 # ---------------- PRODUCT DETAIL ROUTE ----------------
 @app.route("/product/<int:product_id>")
@@ -630,79 +658,154 @@ def product_detail(product_id):
     return render_template("product_detail.html", product=product)
 
 # ---------------- CART ROUTE ----------------
-@app.route("/add-to-cart/<int:product_id>")
+@app.route("/add-to-cart/<int:product_id>", methods=["POST"])
 def add_to_cart(product_id):
+    size = request.form.get("size")
+    quantity = int(request.form.get("quantity", 1))
 
-    # 🔐 Redirect if not logged in
+    # 👤 NOT LOGGED IN → GUEST CART
     if not current_user.is_authenticated:
-        return redirect(url_for("login", next=request.url))
+        guest_cart = session.get("guest_cart", [])
+        guest_cart.append({
+            "product_id": product_id,
+            "size": size,
+            "quantity": quantity
+        })
+        session["guest_cart"] = guest_cart
+        session.modified = True
+        return redirect(url_for("login"))
 
-    product = Product.query.get_or_404(product_id)
+    # 👤 LOGGED IN → DB CART
+    existing = CartItem.query.filter_by(
+        user_id=current_user.id,
+        product_id=product_id,
+        size=size
+    ).first()
 
-    cart = session.get("cart", {})
-
-    if str(product.id) in cart:
-        cart[str(product.id)]["quantity"] += 1
+    if existing:
+        existing.quantity += quantity
     else:
-        cart[str(product.id)] = {
-            "name": product.name,
-            "price": product.discounted_price or product.price,
-            "quantity": 1,
-            "image": product.image_filename
-        }
+        db.session.add(CartItem(
+            user_id=current_user.id,
+            product_id=product_id,
+            size=size,
+            quantity=quantity
+        ))
 
-    session["cart"] = cart
-    session.modified = True
-
+    db.session.commit()
     return redirect(url_for("cart"))
+
+def merge_guest_cart(user_id):
+    guest_cart = session.pop("guest_cart", [])
+
+    for item in guest_cart:
+        existing = CartItem.query.filter_by(
+            user_id=user_id,
+            product_id=item["product_id"],
+            size=item["size"]
+        ).first()
+
+        if existing:
+            existing.quantity += item["quantity"]
+        else:
+            db.session.add(CartItem(
+                user_id=user_id,
+                product_id=item["product_id"],
+                size=item["size"],
+                quantity=item["quantity"]
+            ))
+
+    db.session.commit()
 
 @app.route("/cart")
 @login_required
 def cart():
-    cart = session.get("cart", {})
-    total = sum(item["price"] * item["quantity"] for item in cart.values())
-    return render_template("cart.html", cart=cart, total=total)
+    cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
+
+    subtotal = 0
+    for item in cart_items:
+        price = item.product.discounted_price or item.product.price
+        subtotal += price * item.quantity
+
+    delivery_charge = 0 if subtotal >= 999 else 49
+    total = subtotal + delivery_charge
+
+    return render_template(
+        "cart.html",
+        cart_items=cart_items,
+        subtotal=subtotal,
+        delivery_charge=delivery_charge,
+        total=total
+    )
+
+@app.route("/cart/update/<int:item_id>", methods=["POST"])
+@login_required
+def update_cart(item_id):
+    item = CartItem.query.filter_by(
+        id=item_id,
+        user_id=current_user.id
+    ).first_or_404()
+
+    item.size = request.form.get("size")
+    item.quantity = int(request.form["quantity"])
+    db.session.commit()
+    return redirect("/cart")
+
+@app.route("/cart/remove/<int:item_id>")
+@login_required
+def remove_from_cart(item_id):
+    item = CartItem.query.filter_by(
+        id=item_id,
+        user_id=current_user.id
+    ).first_or_404()
+
+    db.session.delete(item)
+    db.session.commit()
+    return redirect("/cart")
 
 # ---------------- CHECKOUT ROUTE ----------------
 @app.route("/checkout", methods=["GET", "POST"])
 @login_required
 def checkout():
-    cart = session.get("cart", {})
-    if not cart:
+    cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
+    if not cart_items:
         return redirect(url_for("cart"))
 
-    total = sum(item["price"] * item["quantity"] for item in cart.values())
+    subtotal = sum(
+        (item.product.discounted_price or item.product.price) * item.quantity
+        for item in cart_items
+    )
 
-    # 👇 Fetch saved address from user profile
-    saved_address = current_user.address or ""
+    delivery_charge = 0 if subtotal >= 999 else 49
+    total = subtotal + delivery_charge
+
+    saved_address = current_user.address
 
     if request.method == "POST":
         payment_method = request.form.get("payment_method")
-
-        # 🚨 This address is ORDER-SPECIFIC
         delivery_address = request.form.get("address")
 
         order = Order(
             user_id=current_user.id,
             total_amount=total,
             payment_method=payment_method,
-            address=delivery_address   # snapshot
+            address=delivery_address
         )
         db.session.add(order)
         db.session.commit()
 
-        for pid, item in cart.items():
-            order_item = OrderItem(
+        for item in cart_items:
+            db.session.add(OrderItem(
                 order_id=order.id,
-                product_id=int(pid),
-                product_name=item["name"],
-                price=item["price"],
-                quantity=item["quantity"]
-            )
-            db.session.add(order_item)
+                product_id=item.product_id,
+                product_name=item.product.name,
+                price=item.product.discounted_price or item.product.price,
+                quantity=item.quantity,
+                size=item.size
+            ))
 
+        CartItem.query.filter_by(user_id=current_user.id).delete()
         db.session.commit()
-        session.pop("cart", None)
 
         return redirect(url_for("order_success", order_id=order.id))
 
@@ -712,14 +815,12 @@ def checkout():
         saved_address=saved_address
     )
 
-
 # ---------------- ORDER SUCCESS ROUTE ----------------
 @app.route("/order-success/<int:order_id>")
 @login_required
 def order_success(order_id):
     order = Order.query.get_or_404(order_id)
     return render_template("order_success.html", order=order)
-
 
 # ---------------- DEBUG ROUTE ----------------
 
@@ -729,4 +830,7 @@ def debug():
 
 # ---------------- RUN THE APP ----------------
 if __name__ == "__main__":    #---------------- Always be at the end of the file ----------------
+    with app.app_context():
+        db.create_all()
+        # create_admin()
     app.run(debug=True)
