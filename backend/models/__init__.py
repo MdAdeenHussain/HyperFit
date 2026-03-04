@@ -5,6 +5,7 @@ from .cart import CartItem
 from .coupon import Coupon
 from .order import Order, OrderItem, Payment, Shipment
 from .review import Review
+from .admin import AdminActivity, CMSPage, CMSVersion, SiteSetting, EmailCampaign
 
 __all__ = [
     "User",
@@ -20,4 +21,9 @@ __all__ = [
     "Payment",
     "Shipment",
     "Review",
+    "AdminActivity",
+    "CMSPage",
+    "CMSVersion",
+    "SiteSetting",
+    "EmailCampaign",
 ]

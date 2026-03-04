@@ -1,56 +1,142 @@
 import { useEffect, useState } from 'react';
-import api from '../services/api';
+import { API_BASE_URL } from '../utils/constants';
+import adminService from '../services/adminService';
+import AdminSkeleton from './components/AdminSkeleton';
 
 function Customers() {
   const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
+  const [profile, setProfile] = useState(null);
 
   const load = async () => {
-    const { data } = await api.get('/admin/customers');
-    setRows(data.items || []);
+    setLoading(true);
+    setError('');
+    try {
+      const { data } = await adminService.getCustomers({ q: search, status });
+      setRows(data.items || []);
+    } catch (err) {
+      setError(err?.response?.data?.error || err?.message || 'Unable to load customers');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, [search, status]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const exportCsv = async () => {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5000/api'}/admin/export/customers.csv`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('hf_access_token')}` }
+  const download = async (url, filename) => {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('hf_access_token') || ''}`,
+        'X-CSRF-Token': localStorage.getItem('hf_csrf_token') || ''
+      }
     });
     const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = 'customers.csv';
-    anchor.click();
-    URL.revokeObjectURL(url);
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(href);
   };
 
   return (
     <div className="admin-page">
-      <h2>Customer Management</h2>
-      <div className="table-wrap">
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.name}</td>
-                <td>{row.email}</td>
-                <td>{row.phone}</td>
-                <td>{row.is_active ? 'Active' : 'Blocked'}</td>
-                <td>
-                  {!row.is_admin && (
-                    <button onClick={async () => {
-                      await api.patch(`/admin/customers/${row.id}/block`, { block: row.is_active });
-                      load();
-                    }}>{row.is_active ? 'Block' : 'Unblock'}</button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <button onClick={exportCsv}>Export CSV</button>
+      <section className="page-head-row">
+        <div>
+          <h1>Customer Management</h1>
+          <p>View profiles, order history, total spent and account controls.</p>
+        </div>
+        <button className="admin-btn" onClick={() => download(`${API_BASE_URL}/admin/export/customers.csv`, 'customers.csv')}>Export CSV</button>
+      </section>
+
+      <section className="admin-filter-bar">
+        <input type="search" placeholder="Search customers" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="blocked">Blocked</option>
+        </select>
+      </section>
+
+      {error ? <div className="admin-error">{error}</div> : null}
+      {loading ? <AdminSkeleton rows={8} /> : null}
+
+      {!loading ? (
+        <section className="admin-table-card">
+          <div className="admin-table-scroll">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Orders</th>
+                  <th>Total Spent</th>
+                  <th>Last Order</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.name}</td>
+                    <td>{row.email}</td>
+                    <td>{row.phone || '-'}</td>
+                    <td>{row.orders}</td>
+                    <td>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(row.total_spent || 0)}</td>
+                    <td>{row.last_order ? new Date(row.last_order).toLocaleDateString() : '-'}</td>
+                    <td>
+                      <span className={row.is_active ? 'pill success' : 'pill danger'}>{row.is_active ? 'Active' : 'Blocked'}</span>
+                    </td>
+                    <td>
+                      <div className="row-actions-inline">
+                        <button className="ghost" onClick={async () => {
+                          const { data } = await adminService.getCustomerProfile(row.id);
+                          setProfile(data);
+                        }}>Profile</button>
+                        {!row.is_admin ? (
+                          <button className="ghost" onClick={() => adminService.toggleCustomerBlock(row.id, row.is_active).then(load)}>
+                            {row.is_active ? 'Block' : 'Unblock'}
+                          </button>
+                        ) : null}
+                        <button className="ghost" onClick={() => download(`${API_BASE_URL}/admin/customers/${row.id}/orders/export.csv`, `customer-${row.id}-orders.csv`)}>Orders CSV</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
+      {profile ? (
+        <section className="admin-profile-modal" onClick={() => setProfile(null)}>
+          <article onClick={(e) => e.stopPropagation()}>
+            <header>
+              <h3>{profile.name}</h3>
+              <button className="ghost" onClick={() => setProfile(null)}>Close</button>
+            </header>
+            <p>{profile.email} {profile.phone ? `• ${profile.phone}` : ''}</p>
+            <strong>Total spent: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(profile.total_spent || 0)}</strong>
+
+            <div className="mini-order-list">
+              {(profile.orders || []).slice(0, 10).map((order) => (
+                <div key={order.order_number}>
+                  <p>{order.order_number}</p>
+                  <small>{order.status} • {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.amount || 0)}</small>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+      ) : null}
     </div>
   );
 }

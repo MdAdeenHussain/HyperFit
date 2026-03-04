@@ -7,6 +7,7 @@ import { CartProvider } from './context/CartContext';
 import { ThemeProvider } from './context/ThemeContext';
 import './styles/theme.css';
 import './styles/global.css';
+import './styles/admin.css';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

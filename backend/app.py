@@ -153,19 +153,22 @@ def _ensure_default_admin_and_categories():
         admin.is_active = True
 
     if Category.query.count() == 0:
+        men = Category(name="Men", slug="men", gender="men")
+        women = Category(name="Women", slug="women", gender="women")
+        db.session.add_all([men, women])
+        db.session.flush()
+
         rows = [
-            ("Men", "men", "men"),
-            ("Women", "women", "women"),
-            ("T-Shirts", "t-shirts", "men"),
-            ("Compression", "compression", "men"),
-            ("Pants", "pants", "men"),
-            ("Shorts", "shorts", "men"),
-            ("Sports Bra", "sports-bra", "women"),
-            ("Leggings", "leggings", "women"),
-            ("Women T-Shirts", "women-t-shirts", "women"),
+            ("T-Shirts", "men-t-shirts", "men", men.id),
+            ("Compression", "men-compression", "men", men.id),
+            ("Pants", "men-pants", "men", men.id),
+            ("Shorts", "men-shorts", "men", men.id),
+            ("Sports Bra", "women-sports-bra", "women", women.id),
+            ("Leggings", "women-leggings", "women", women.id),
+            ("T-Shirts", "women-t-shirts", "women", women.id),
         ]
-        for name, slug, gender in rows:
-            db.session.add(Category(name=name, slug=slug, gender=gender))
+        for name, slug, gender, parent_id in rows:
+            db.session.add(Category(name=name, slug=slug, gender=gender, parent_id=parent_id))
 
     db.session.commit()
 
