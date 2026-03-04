@@ -1,76 +1,163 @@
-# HyperFit - Full-Stack E-Commerce Clothing Platform
+# HyperFit
 
-Flask backend + React storefront/admin, served together on one URL in local mode.
+**HyperFit** is a modern clothing brand website designed for fitness and lifestyle apparel. The project focuses on a **clean minimalist UI, high performance, and scalable architecture** to deliver a premium brand experience and seamless online shopping.
 
-## Quick Start (single Flask server on `http://127.0.0.1:5000/`)
+This project demonstrates a **production-ready full-stack web application** built with modern web technologies.
 
-1. Prepare env file
-```bash
-cd /Users/mohammadadeenhussain/Desktop/HyperFit
-cp .env.example .env
+---
+
+# Features
+
+* Modern minimalist UI inspired by leading fashion brands
+* Fully responsive design (mobile, tablet, desktop)
+* Product catalog with clothing collections
+* Shopping cart functionality
+* Secure checkout flow
+* User authentication system
+* Admin dashboard for product management
+* Database powered product storage
+* SEO optimized structure
+* Fast loading and optimized assets
+
+---
+
+# Tech Stack
+
+### Frontend
+
+* HTML5
+* CSS3
+* JavaScript
+* React.js (for dynamic UI components)
+
+### Backend
+
+* Python
+* Flask
+
+### Database
+
+* PostgreSQL
+
+### Tools & Deployment
+
+* Git & GitHub
+* Gunicorn
+* Render (deployment)
+* Environment Variables (.env)
+
+---
+
+# Project Structure
+
+```
+HyperFit/
+│
+├── app/
+│   ├── static/
+│   │   ├── css/
+│   │   ├── js/
+│   │   ├── images/
+│   │
+│   ├── templates/
+│   │   ├── components/
+│   │   ├── admin/
+│   │   ├── user/
+│   │
+│   ├── routes/
+│   ├── models/
+│   └── utils/
+│
+├── migrations/
+│
+├── config.py
+├── app.py
+├── requirements.txt
+├── .env
+└── README.md
 ```
 
-2. Build frontend once
+---
+
+# Installation
+
+Clone the repository:
+
 ```bash
-cd frontend
-npm install
-npm run build
+git clone https://github.com/yourusername/HyperFit.git
+cd HyperFit
 ```
 
-3. Run backend
+Create virtual environment:
+
 ```bash
-cd ../backend
-python3 -m venv .venv
-source .venv/bin/activate
+python -m venv venv
+source venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
-flask --app app run
 ```
 
-If `flask` command is not found, use:
+---
+
+# Environment Variables
+
+Create a `.env` file and add:
+
+```
+SECRET_KEY=your_secret_key
+DATABASE_URL=your_database_url
+ADMIN_EMAIL=your_admin_email
+ADMIN_PASSWORD=your_admin_password
+```
+
+---
+
+# Run the Application
+
 ```bash
-python3 -m flask --app app run
+flask run
 ```
 
-Open: `http://127.0.0.1:5000/`
+or for production:
 
-## Important local behavior
-
-- Database tables are auto-created at startup (`db.create_all()`), so `flask db init/migrate/upgrade` is not required for local run.
-- Admin user is auto-created from `.env` values:
-  - `ADMIN_EMAIL`
-  - `ADMIN_PASSWORD`
-- Default DB fallback is SQLite (`backend/hyperfit.db`) if `DATABASE_URL` is not set.
-- For PostgreSQL, set `DATABASE_URL` in `.env`.
-
-## Project Structure
-
-```text
-backend/
-  app.py
-  config.py
-  models.py
-  schema.sql
-  routes/
-  services/
-  utils/
-  scripts/
-frontend/
-  src/
-    components/
-    pages/
-    services/
-    context/
+```bash
+gunicorn app:app
 ```
 
-## API and Schema
+---
 
-- API reference: `backend/API_ENDPOINTS.md`
-- SQLAlchemy models: `backend/models.py`
-- PostgreSQL schema reference: `backend/schema.sql`
+# Screenshots
 
-## Deployment
+Add screenshots of:
 
-- Gunicorn entrypoint: `backend/wsgi.py`
-- Docker files: `backend/Dockerfile`, `frontend/Dockerfile`
-- Compose: `docker-compose.yml`
-- Deployment notes: `DEPLOYMENT.md`
+* Homepage
+* Product page
+* Shopping cart
+* Admin dashboard
+
+---
+
+# Future Improvements
+
+* Payment gateway integration (Stripe / Razorpay)
+* Wishlist functionality
+* Product reviews and ratings
+* AI based clothing recommendations
+* Advanced analytics dashboard
+
+---
+
+# Author
+
+**Md Adeen Hussain**
+B.Tech Computer Science (AI & Data Science)
+Full-Stack Web Developer
+
+GitHub:
+[https://github.com/MdAdsenHussain](https://github.com/MdAdsenHussain)
+
+---
