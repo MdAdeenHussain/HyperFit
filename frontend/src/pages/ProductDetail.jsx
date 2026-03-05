@@ -6,6 +6,7 @@ import ProductCard from '../components/ProductCard';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { useCart } from '../context/CartContext';
 import { setMeta, inr } from '../utils/helpers';
+import Reveal from '../components/Reveal';
 
 function ProductDetail() {
   const { slug } = useParams();
@@ -18,6 +19,7 @@ function ProductDetail() {
   const [color, setColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' });
+  const [actionState, setActionState] = useState('idle');
 
   useEffect(() => {
     async function load() {
@@ -37,6 +39,7 @@ function ProductDetail() {
       const next = [data.product, ...viewed.filter((item) => item.id !== data.product.id)].slice(0, 8);
       localStorage.setItem('hf_recently_viewed', JSON.stringify(next));
     }
+
     load();
   }, [slug]);
 
@@ -54,7 +57,8 @@ function ProductDetail() {
 
   const addWishlist = async () => {
     await api.post('/user/wishlist', { product_id: product.id });
-    alert('Added to wishlist');
+    setActionState('wishlisted');
+    window.setTimeout(() => setActionState('idle'), 1200);
   };
 
   const shareProduct = async () => {
@@ -64,13 +68,20 @@ function ProductDetail() {
       return;
     }
     await navigator.clipboard.writeText(url);
-    alert('Link copied');
+    setActionState('shared');
+    window.setTimeout(() => setActionState('idle'), 1200);
+  };
+
+  const handleAddToCart = async () => {
+    await addToCart({ product_id: product.id, quantity, size, color });
+    setActionState('carted');
+    window.setTimeout(() => setActionState('idle'), 1200);
   };
 
   if (!product) return <div className="hf-container page-gap"><SkeletonLoader rows={4} /></div>;
 
   return (
-    <div className="hf-container page-gap">
+    <div className="hf-container page-gap product-page">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'Product',
@@ -86,27 +97,33 @@ function ProductDetail() {
       }) }} />
 
       <div className="detail-grid">
-        <ProductGallery images={product.images} />
+        <Reveal threshold={0.1}><ProductGallery images={product.images} /></Reveal>
 
-        <section>
+        <Reveal as="section" className="product-detail-panel" delay={0.08} threshold={0.1}>
           <h1>{product.name}</h1>
           <p className="price">{inr(product.price)}</p>
           <p>{product.description}</p>
 
           <label>Size</label>
-          <select value={size} onChange={(e) => setSize(e.target.value)}>{product.sizes.map((s) => <option key={s}>{s}</option>)}</select>
+          <select value={size} onChange={(event) => setSize(event.target.value)}>{product.sizes.map((item) => <option key={item}>{item}</option>)}</select>
 
-          <label>Colour</label>
-          <select value={color} onChange={(e) => setColor(e.target.value)}>{product.colors.map((c) => <option key={c}>{c}</option>)}</select>
+          <label>Color</label>
+          <select value={color} onChange={(event) => setColor(event.target.value)}>{product.colors.map((item) => <option key={item}>{item}</option>)}</select>
 
           <label>Quantity</label>
-          <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
+          <input type="number" min="1" value={quantity} onChange={(event) => setQuantity(Number(event.target.value))} />
 
           <div className="row-actions">
-            <button onClick={() => addToCart({ product_id: product.id, quantity, size, color })}>Add to Cart</button>
+            <button onClick={handleAddToCart}>Add to Cart</button>
             <button onClick={addWishlist}>Wishlist</button>
             <button onClick={shareProduct}>Share</button>
           </div>
+
+          <small className="product-action-feedback">
+            {actionState === 'carted' && 'Added to cart'}
+            {actionState === 'wishlisted' && 'Added to wishlist'}
+            {actionState === 'shared' && 'Link copied'}
+          </small>
 
           <article className="card-block">
             <h4>Fabric Details</h4>
@@ -114,20 +131,20 @@ function ProductDetail() {
             <h4>Size Guide</h4>
             <p>{product.size_guide || 'True to fit. For oversized look, choose one size up.'}</p>
           </article>
-        </section>
+        </Reveal>
       </div>
 
-      <section>
+      <Reveal as="section" threshold={0.15}>
         <h2>Related Products</h2>
         <div className="product-grid">{related.map((item) => <ProductCard key={item.id} product={item} />)}</div>
-      </section>
+      </Reveal>
 
-      <section>
+      <Reveal as="section" threshold={0.15}>
         <h2>Recently Viewed</h2>
         <div className="product-grid">{recentlyViewed.map((item) => <ProductCard key={item.id} product={item} />)}</div>
-      </section>
+      </Reveal>
 
-      <section>
+      <Reveal as="section" threshold={0.15}>
         <h2>Reviews</h2>
         <div className="review-grid">
           {reviews.map((review) => (
@@ -140,14 +157,22 @@ function ProductDetail() {
         </div>
 
         <div className="review-form">
-          <input placeholder="Title" value={reviewForm.title} onChange={(e) => setReviewForm((p) => ({ ...p, title: e.target.value }))} />
-          <textarea placeholder="Write your review" value={reviewForm.comment} onChange={(e) => setReviewForm((p) => ({ ...p, comment: e.target.value }))} />
-          <select value={reviewForm.rating} onChange={(e) => setReviewForm((p) => ({ ...p, rating: Number(e.target.value) }))}>
-            {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n}</option>)}
+          <input placeholder="Title" value={reviewForm.title} onChange={(event) => setReviewForm((prev) => ({ ...prev, title: event.target.value }))} />
+          <textarea placeholder="Write your review" value={reviewForm.comment} onChange={(event) => setReviewForm((prev) => ({ ...prev, comment: event.target.value }))} />
+          <select value={reviewForm.rating} onChange={(event) => setReviewForm((prev) => ({ ...prev, rating: Number(event.target.value) }))}>
+            {[5, 4, 3, 2, 1].map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
           <button onClick={addReview}>Submit Review</button>
         </div>
-      </section>
+      </Reveal>
+
+      <div className="mobile-sticky-cart">
+        <div>
+          <small>{inr(product.price)}</small>
+          <strong>{product.name}</strong>
+        </div>
+        <button onClick={handleAddToCart}>Add to Cart</button>
+      </div>
     </div>
   );
 }

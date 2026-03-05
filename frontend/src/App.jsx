@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -12,6 +12,12 @@ import AdminLogin from './pages/AdminLogin';
 import Register from './pages/Register';
 import Account from './pages/Account';
 import Wishlist from './pages/Wishlist';
+import Company from './pages/Company';
+import SitemapPage from './pages/SitemapPage';
+import TermsOfUse from './pages/legals/TermsOfUse';
+import PrivacyPolicy from './pages/legals/PrivacyPolicy';
+import RefundPolicy from './pages/legals/RefundPolicy';
+import CookiePolicy from './pages/legals/CookiePolicy';
 import AdminShell from './admin/layout/AdminShell';
 import { useAuth } from './context/AuthContext';
 
@@ -28,10 +34,16 @@ const Integrations = lazy(() => import('./admin/Integrations'));
 const Settings = lazy(() => import('./admin/Settings'));
 
 function BaseLayout() {
+  const location = useLocation();
+
   return (
     <>
       <Navbar />
-      <main className="hf-main"><Outlet /></main>
+      <main className="hf-main">
+        <div key={`${location.pathname}${location.search}`} className="page-transition">
+          <Outlet />
+        </div>
+      </main>
       <Footer />
     </>
   );
@@ -74,6 +86,12 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/account" element={<Protected><Account /></Protected>} />
         <Route path="/wishlist" element={<Protected><Wishlist /></Protected>} />
+        <Route path="/company" element={<Company />} />
+        <Route path="/sitemap" element={<SitemapPage />} />
+        <Route path="/legals/terms-of-use" element={<TermsOfUse />} />
+        <Route path="/legals/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/legals/refund-policy" element={<RefundPolicy />} />
+        <Route path="/legals/cookie-policy" element={<CookiePolicy />} />
       </Route>
 
       <Route path="/admin" element={<AdminOnly><AdminShell /></AdminOnly>}>

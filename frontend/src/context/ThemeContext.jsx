@@ -13,6 +13,7 @@ export function ThemeProvider({ children }) {
   const value = useMemo(
     () => ({
       theme,
+      setTheme: (next) => setTheme(next === 'dark' ? 'dark' : 'light'),
       toggleTheme: () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
     }),
     [theme]

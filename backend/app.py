@@ -11,6 +11,7 @@ from models import Category, User
 from routes.admin_routes import admin_bp
 from routes.auth_routes import auth_bp
 from routes.cart_routes import cart_bp
+from routes.marketing_routes import marketing_bp
 from routes.order_routes import order_bp
 from routes.payment_routes import payment_bp
 from routes.product_routes import product_bp
@@ -114,6 +115,7 @@ def create_app(env: str | None = None):
     app.register_blueprint(shipping_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(marketing_bp)
 
     with app.app_context():
         try:

@@ -5,6 +5,7 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ThemeProvider } from './context/ThemeContext';
+import './styles/tailwind.css';
 import './styles/theme.css';
 import './styles/global.css';
 import './styles/admin.css';

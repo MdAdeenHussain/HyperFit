@@ -1,31 +1,156 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
-import { inr } from '../utils/helpers';
+import { setMeta } from '../utils/helpers';
+import { ACCOUNT_NAV_GROUPS } from '../account/accountNav';
+import AccountHeader from '../account/components/AccountHeader';
+import AccountSidebar from '../account/components/AccountSidebar';
+import AccountOverview from '../account/components/AccountOverview';
+import OrdersPanel from '../account/components/OrdersPanel';
+import ProfileCard from '../account/components/ProfileCard';
+import CouponsPanel from '../account/components/CouponsPanel';
+import AddressesPanel from '../account/components/AddressesPanel';
+import ThemeSelector from '../account/components/ThemeSelector';
+import DeleteAccountPanel from '../account/components/DeleteAccountPanel';
+import PlaceholderPanel from '../account/components/PlaceholderPanel';
+import AccountSkeleton from '../account/components/AccountSkeleton';
+
+function profileMetaKey(userId) {
+  return `hf_profile_meta_${userId}`;
+}
+
+function parseFullName(fullName = '') {
+  const trimmed = fullName.trim();
+  if (!trimmed) return { first_name: '', last_name: '' };
+  const [first, ...rest] = trimmed.split(/\s+/);
+  return {
+    first_name: first || '',
+    last_name: rest.join(' ') || '-'
+  };
+}
+
+function formatCouponDate(date) {
+  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
 
 function Account() {
-  const { user, refreshProfile } = useAuth();
-  const [form, setForm] = useState({ first_name: '', last_name: '', phone: '' });
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user, refreshProfile, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
+
+  const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
   const [addresses, setAddresses] = useState([]);
-  const [address, setAddress] = useState({ name: '', line1: '', line2: '', city: '', state: '', country: 'India', pincode: '', phone: '' });
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [profileMeta, setProfileMeta] = useState({
+    gender: '',
+    dateOfBirth: '',
+    location: '',
+    alternateMobile: '',
+    hintName: ''
+  });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const activeTab = searchParams.get('tab') || 'overview';
+  const isDark = theme === 'dark';
 
   useEffect(() => {
+    setMeta({
+      title: 'My Account | HyperFit',
+      description: 'Manage your profile, orders, credits, addresses, preferences and account settings.'
+    });
+  }, []);
+
+  const loadAccountData = async () => {
     if (!user) return;
-    setForm({ first_name: user.first_name || '', last_name: user.last_name || '', phone: user.phone || '' });
 
-    async function load() {
-      const [myOrders, myAddresses] = await Promise.all([api.get('/user/orders'), api.get('/user/addresses')]);
-      setOrders(myOrders.data.items || []);
-      setAddresses(myAddresses.data.items || []);
+    setLoading(true);
+    try {
+      const [ordersRes, addressesRes, wishlistRes, featuredRes] = await Promise.all([
+        api.get('/user/orders'),
+        api.get('/user/addresses'),
+        api.get('/user/wishlist'),
+        api.get('/products/featured')
+      ]);
+
+      setOrders(ordersRes.data.items || []);
+      setAddresses(addressesRes.data.items || []);
+      setWishlistCount((wishlistRes.data.items || []).length);
+      setFeaturedProducts(featuredRes.data.items || []);
+
+      const storedMeta = JSON.parse(localStorage.getItem(profileMetaKey(user.id)) || '{}');
+      setProfileMeta((prev) => ({ ...prev, ...storedMeta }));
+    } finally {
+      setLoading(false);
     }
-    load();
-  }, [user]);
+  };
 
-  const updateProfile = async () => {
-    await api.put('/user/account', form);
-    await refreshProfile();
-    alert('Profile updated');
+  useEffect(() => {
+    loadAccountData();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const couponData = useMemo(() => {
+    const discounts = [10, 15, 20, 12, 18, 25, 14, 22];
+    const minimums = [999, 1199, 1499, 899, 1299, 1799, 1099, 1999];
+
+    const source = featuredProducts.length ? featuredProducts : Array.from({ length: 6 }).map((_, index) => ({
+      id: index + 1,
+      name: `HyperFit Offer ${index + 1}`,
+      images: ['/placeholder.png']
+    }));
+
+    return source.map((item, index) => {
+      const discount = discounts[index % discounts.length];
+      const expiryDate = new Date(Date.now() + (index + 8) * 24 * 60 * 60 * 1000);
+      return {
+        id: item.id,
+        image: item.images?.[0] || '/placeholder.png',
+        title: `Flat ${discount}% OFF`,
+        minimumText: `On min. purchase of ₹${minimums[index % minimums.length]}`,
+        code: `HF${(item.slug || item.name || 'DEAL').replace(/[^A-Z0-9]/gi, '').slice(0, 5).toUpperCase()}${100 + index}`,
+        expiryDate,
+        expiryLabel: formatCouponDate(expiryDate),
+        discount,
+        trendingScore: Math.max(20, 100 - index * 8)
+      };
+    });
+  }, [featuredProducts]);
+
+  const profile = useMemo(() => ({
+    fullName: `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
+    mobile: user?.phone || '',
+    email: user?.email || '',
+    gender: profileMeta.gender || '',
+    dateOfBirth: profileMeta.dateOfBirth || '',
+    location: profileMeta.location || '',
+    alternateMobile: profileMeta.alternateMobile || '',
+    hintName: profileMeta.hintName || ''
+  }), [profileMeta, user]);
+
+  const stats = useMemo(() => ([
+    { label: 'Total Orders', value: orders.length },
+    { label: 'Wishlist Items', value: wishlistCount },
+    { label: 'Saved Addresses', value: addresses.length },
+    { label: 'Active Coupons', value: couponData.length }
+  ]), [orders.length, wishlistCount, addresses.length, couponData.length]);
+
+  const activeLabel = useMemo(() => {
+    const items = ACCOUNT_NAV_GROUPS.flatMap((group) => group.items);
+    const match = items.find((item) => item.key === activeTab);
+    return match?.label || 'Overview';
+  }, [activeTab]);
+
+  const setActiveTab = (tab) => {
+    if (tab === 'logout') {
+      logout().then(() => navigate('/'));
+      return;
+    }
+    setSearchParams({ tab });
   };
 
   const downloadInvoice = async (orderNumber) => {
@@ -41,79 +166,139 @@ function Account() {
     URL.revokeObjectURL(url);
   };
 
-  const addAddress = async () => {
+  const saveProfile = async (nextProfile) => {
+    const { first_name, last_name } = parseFullName(nextProfile.fullName);
+
+    await api.put('/user/account', {
+      first_name,
+      last_name,
+      phone: nextProfile.mobile
+    });
+
+    localStorage.setItem(profileMetaKey(user.id), JSON.stringify({
+      gender: nextProfile.gender,
+      dateOfBirth: nextProfile.dateOfBirth,
+      location: nextProfile.location,
+      alternateMobile: nextProfile.alternateMobile,
+      hintName: nextProfile.hintName
+    }));
+
+    setProfileMeta({
+      gender: nextProfile.gender,
+      dateOfBirth: nextProfile.dateOfBirth,
+      location: nextProfile.location,
+      alternateMobile: nextProfile.alternateMobile,
+      hintName: nextProfile.hintName
+    });
+
+    await refreshProfile();
+  };
+
+  const addAddress = async (address) => {
     await api.post('/user/addresses', address);
-    const { data } = await api.get('/user/addresses');
-    setAddresses(data.items || []);
+    await loadAccountData();
+  };
+
+  const removeAddress = async (addressId) => {
+    await api.delete(`/user/addresses/${addressId}`);
+    await loadAccountData();
+  };
+
+  const editAddress = async (addressId, payload) => {
+    const current = addresses.find((item) => item.id === addressId);
+    if (!current) return;
+
+    await api.delete(`/user/addresses/${addressId}`);
+    await api.post('/user/addresses', {
+      ...payload,
+      country: payload.country || 'India',
+      is_default: current.is_default
+    });
+
+    await loadAccountData();
+  };
+
+  const renderTab = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <AccountOverview stats={stats} recentOrders={orders.slice(0, 5)} onInvoice={downloadInvoice} isDark={isDark} />;
+      case 'orders':
+        return <OrdersPanel orders={orders} onInvoice={downloadInvoice} isDark={isDark} />;
+      case 'profile':
+        return <ProfileCard profile={profile} onSave={saveProfile} isDark={isDark} />;
+      case 'coupons':
+        return <CouponsPanel coupons={couponData} isDark={isDark} />;
+      case 'addresses':
+        return <AddressesPanel addresses={addresses} onAdd={addAddress} onEdit={editAddress} onRemove={removeAddress} isDark={isDark} />;
+      case 'theme':
+        return <ThemeSelector theme={theme} setTheme={setTheme} isDark={isDark} />;
+      case 'delete-account':
+        return (
+          <DeleteAccountPanel
+            onKeepAccount={() => setActiveTab('overview')}
+            onDelete={async () => {
+              await logout();
+              navigate('/');
+            }}
+            isDark={isDark}
+          />
+        );
+      case 'store-credit':
+        return <PlaceholderPanel title="Store Credit" description="Track refunds and available store balance for your next purchase." isDark={isDark} />;
+      case 'wallet':
+        return <PlaceholderPanel title="Wallet" description="Manage wallet balance, credits, and linked payment instruments." isDark={isDark} />;
+      case 'saved-cards':
+        return <PlaceholderPanel title="Saved Cards" description="Securely manage your saved cards for one-click checkout." isDark={isDark} />;
+      case 'saved-upi':
+        return <PlaceholderPanel title="Saved UPI" description="Add or remove UPI IDs for instant and secure payments." isDark={isDark} />;
+      case 'saved-wallets':
+        return <PlaceholderPanel title="Saved Wallets / BNPL" description="Configure your preferred wallets and buy-now-pay-later providers." isDark={isDark} />;
+      case 'terms':
+        return <PlaceholderPanel title="Terms of Use" description="Read the terms governing use of HyperFit products and services." isDark={isDark} />;
+      case 'privacy':
+        return <PlaceholderPanel title="Privacy Policy" description="Understand how HyperFit collects, stores, and protects your data." isDark={isDark} />;
+      default:
+        return <AccountOverview stats={stats} recentOrders={orders.slice(0, 5)} onInvoice={downloadInvoice} isDark={isDark} />;
+    }
   };
 
   if (!user) return <div className="hf-container page-gap">Login required.</div>;
 
   return (
     <div className="hf-container page-gap">
-      <h1>My Account</h1>
+      <div className="mx-auto w-full space-y-4">
+        <AccountHeader userName={profile.fullName || user.email} activeLabel={activeLabel} onOpenMenu={() => setMobileMenuOpen(true)} isDark={isDark} />
 
-      <section className="card-block">
-        <h3>Profile</h3>
-        <div className="form-grid">
-          <input value={form.first_name} onChange={(e) => setForm((p) => ({ ...p, first_name: e.target.value }))} />
-          <input value={form.last_name} onChange={(e) => setForm((p) => ({ ...p, last_name: e.target.value }))} />
-          <input value={user.email} disabled />
-          <input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} />
-          <button onClick={updateProfile}>Save</button>
-        </div>
-      </section>
+        <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
+          <AccountSidebar
+            groups={ACCOUNT_NAV_GROUPS}
+            activeTab={activeTab}
+            onSelect={setActiveTab}
+            userName={profile.fullName || user.email}
+            openMobile={mobileMenuOpen}
+            onCloseMobile={() => setMobileMenuOpen(false)}
+            isDark={isDark}
+          />
 
-      <section className="card-block">
-        <h3>Address Management</h3>
-        <div className="form-grid">
-          {Object.keys(address).map((key) => (
-            <input key={key} placeholder={key} value={address[key]} onChange={(e) => setAddress((p) => ({ ...p, [key]: e.target.value }))} />
-          ))}
-          <button onClick={addAddress}>Add Address</button>
+          <main>
+            {loading ? (
+              <AccountSkeleton isDark={isDark} />
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {renderTab()}
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </main>
         </div>
-        <div className="address-list">
-          {addresses.map((item) => (
-            <article key={item.id} className="mini-card">
-              <h4>{item.name}</h4>
-              <p>{item.line1}, {item.city}, {item.state}</p>
-              <p>{item.pincode}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="card-block">
-        <h3>Order History & Tracking</h3>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Order #</th>
-                <th>Status</th>
-                <th>Ordered Date</th>
-                <th>Expected Delivery</th>
-                <th>Price</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((item) => (
-                <tr key={item.order_number}>
-                  <td>{item.order_number}</td>
-                  <td>{item.status}</td>
-                  <td>{new Date(item.ordered_date).toLocaleDateString()}</td>
-                  <td>{item.expected_delivery ? new Date(item.expected_delivery).toLocaleDateString() : '-'}</td>
-                  <td>{inr(item.price)}</td>
-                  <td>
-                    <button onClick={() => downloadInvoice(item.order_number)}>Invoice</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }
