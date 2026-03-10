@@ -38,7 +38,12 @@ def serialize_product(product: Product):
         "seo_title": product.seo_title,
         "seo_description": product.seo_description,
         "category": product.category.name if product.category else None,
+        "category_slug": product.category.slug if product.category else None,
+        "category_parent": product.category.parent.name if product.category and product.category.parent else None,
+        "category_parent_slug": product.category.parent.slug if product.category and product.category.parent else None,
+        "gender": product.category.gender if product.category else None,
         "category_id": product.category_id,
+        "created_at": product.created_at.isoformat(),
     }
 
 
@@ -46,7 +51,7 @@ def serialize_product(product: Product):
 @cache.cached(timeout=120, query_string=True)
 def list_products():
     page = safe_int(request.args.get("page"), 1)
-    per_page = min(24, safe_int(request.args.get("per_page"), 12))
+    per_page = min(60, safe_int(request.args.get("per_page"), 12))
 
     search = request.args.get("search")
     category = request.args.get("category")
@@ -81,6 +86,8 @@ def list_products():
             joined_category = True
         if category in {"men", "women"}:
             query = query.filter(Category.gender == category)
+        elif category == "compression":
+            query = query.filter(or_(Category.slug.ilike("%compression%"), Category.name.ilike("%compression%")))
         else:
             query = query.filter(Category.slug == category)
     if sale and sale.lower() == "true":
@@ -94,7 +101,15 @@ def list_products():
 
     query = query.filter(Product.price >= min_price, Product.price <= max_price, Product.rating_avg >= rating)
 
-    if sort == "price_asc":
+    if sort == "featured":
+        query = query.order_by(
+            Product.is_featured.desc(),
+            Product.is_recommended.desc(),
+            Product.is_on_sale.desc(),
+            Product.review_count.desc(),
+            Product.created_at.desc(),
+        )
+    elif sort == "price_asc":
         query = query.order_by(Product.price.asc())
     elif sort == "price_desc":
         query = query.order_by(Product.price.desc())
