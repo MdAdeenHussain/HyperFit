@@ -4,12 +4,22 @@
   box-sizing: border-box;
 }
 
+:root {
+  --hf-navbar-height: 74px;
+  --hf-page-top-space: clamp(1rem, 2.4vw, 1.4rem);
+  --hf-scroll-offset: calc(var(--hf-navbar-height) + var(--hf-page-top-space));
+}
+
 html,
 body,
 #root {
   margin: 0;
   padding: 0;
   min-height: 100%;
+}
+
+html {
+  scroll-padding-top: var(--hf-scroll-offset);
 }
 
 body {
@@ -55,13 +65,18 @@ button {
 }
 
 .page-gap {
-  padding: clamp(1rem, 2vw, 1.6rem) 0 2.2rem;
+  padding: 0 0 2.2rem;
   display: grid;
   gap: 1.35rem;
 }
 
 .hf-main {
   min-height: calc(100vh - 220px);
+  padding-top: var(--hf-page-top-space);
+}
+
+.hf-main :where([id]) {
+  scroll-margin-top: var(--hf-scroll-offset);
 }
 
 .page-transition {
@@ -1086,7 +1101,7 @@ button {
 
 .auth-page {
   max-width: 520px;
-  margin: 1.6rem auto;
+  margin: 0 auto 1.6rem;
 }
 
 .form-grid,
@@ -1395,6 +1410,11 @@ td {
 }
 
 @media (max-width: 680px) {
+  :root {
+    --hf-navbar-height: 66px;
+    --hf-page-top-space: clamp(0.85rem, 4vw, 1.1rem);
+  }
+
   .navbar-inner {
     min-height: 66px;
   }

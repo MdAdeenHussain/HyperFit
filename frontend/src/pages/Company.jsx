@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { setMeta } from '../utils/helpers';
 
@@ -42,20 +42,12 @@ const SECTIONS = [
 ];
 
 function Company() {
-  const location = useLocation();
-
   useEffect(() => {
     setMeta({
       title: 'Company | HyperFit',
       description: 'About HyperFit, customer support information, shipping details, returns, and FAQs.'
     });
   }, []);
-
-  useEffect(() => {
-    if (!location.hash) return;
-    const section = document.querySelector(location.hash);
-    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [location.hash]);
 
   return (
     <div className="hf-container page-gap">
