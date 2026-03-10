@@ -9,6 +9,7 @@ from flask_wtf.csrf import generate_csrf
 from extensions import db
 from models.user import OTPVerification, User
 from services.email_templates import newsletter_template
+from services.newsletter_service import ensure_user_newsletter_subscription
 from services.sendgrid_service import SendGridService
 from utils.auth_utils import get_current_user
 from utils.rate_limiter import auth_limit, strict_limit
@@ -56,10 +57,12 @@ def register():
         last_name=data["last_name"].strip(),
         email=email,
         phone=(data.get("phone") or "").strip() or None,
+        newsletter_subscribed=True,
     )
     user.set_password(data["password"])
 
     db.session.add(user)
+    ensure_user_newsletter_subscription(user)
     db.session.commit()
 
     otp_code = _otp()
@@ -101,6 +104,9 @@ def login():
         return jsonify({"error": "Account blocked"}), 403
 
     login_user(user)
+    _, changed, _ = ensure_user_newsletter_subscription(user)
+    if changed:
+        db.session.commit()
     tokens = _tokens(user)
     return jsonify(
         {
@@ -110,6 +116,7 @@ def login():
                 "name": user.full_name,
                 "email": user.email,
                 "is_admin": user.is_admin,
+                "newsletter_subscribed": user.newsletter_subscribed,
             },
             **tokens,
         }
@@ -139,6 +146,7 @@ def me():
             "email_verified": user.email_verified,
             "phone_verified": user.phone_verified,
             "is_admin": user.is_admin,
+            "newsletter_subscribed": user.newsletter_subscribed,
         }
     )
 
@@ -246,12 +254,18 @@ def google_login():
 
     user = User.query.filter((User.email == email) | (User.google_id == google_id)).first()
     if not user:
-        user = User(first_name=data.get("first_name", "Google"), last_name=data.get("last_name", "User"), email=email)
+        user = User(
+            first_name=data.get("first_name", "Google"),
+            last_name=data.get("last_name", "User"),
+            email=email,
+            newsletter_subscribed=True,
+        )
         user.google_id = google_id
         user.email_verified = True
         db.session.add(user)
     else:
         user.google_id = google_id
+    ensure_user_newsletter_subscription(user)
     db.session.commit()
 
     tokens = _tokens(user)
@@ -269,12 +283,18 @@ def apple_login():
 
     user = User.query.filter((User.email == email) | (User.apple_id == apple_id)).first()
     if not user:
-        user = User(first_name=data.get("first_name", "Apple"), last_name=data.get("last_name", "User"), email=email)
+        user = User(
+            first_name=data.get("first_name", "Apple"),
+            last_name=data.get("last_name", "User"),
+            email=email,
+            newsletter_subscribed=True,
+        )
         user.apple_id = apple_id
         user.email_verified = True
         db.session.add(user)
     else:
         user.apple_id = apple_id
+    ensure_user_newsletter_subscription(user)
     db.session.commit()
 
     tokens = _tokens(user)

@@ -17,6 +17,7 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     email_verified = db.Column(db.Boolean, default=False, nullable=False)
     phone_verified = db.Column(db.Boolean, default=False, nullable=False)
+    newsletter_subscribed = db.Column(db.Boolean, default=True, nullable=False)
     google_id = db.Column(db.String(255), nullable=True, unique=True)
     apple_id = db.Column(db.String(255), nullable=True, unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)

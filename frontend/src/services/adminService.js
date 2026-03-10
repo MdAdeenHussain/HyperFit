@@ -9,6 +9,12 @@ const adminService = {
   refundOrder: (orderNumber) => api.post(`/admin/orders/${orderNumber}/refund`),
 
   getProducts: (params = {}) => api.get('/admin/products', { params }),
+  uploadImages: (files, kind = 'image') => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+    formData.append('kind', kind);
+    return api.post('/admin/uploads/images', formData);
+  },
   createProduct: (payload) => api.post('/admin/products', payload),
   updateProduct: (id, payload) => api.put(`/admin/products/${id}`, payload),
   deleteProduct: (id) => api.delete(`/admin/products/${id}`),

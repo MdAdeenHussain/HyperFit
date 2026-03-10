@@ -8,7 +8,6 @@ import Reveal from '../components/Reveal';
 import HeroSection from '../components/HeroSection';
 import FeaturedProduct from '../components/FeaturedProduct';
 import ReviewCard from '../components/ReviewCard';
-import NewsletterForm from '../components/NewsletterForm';
 
 const CUSTOMER_REVIEWS = [
   {
@@ -156,11 +155,6 @@ function Home() {
         </div>
       </Reveal>
 
-      <Reveal as="section" className="newsletter-section" threshold={0.15}>
-        <h2>Newsletter</h2>
-        <p>Get first access to new drops and limited runs.</p>
-        <NewsletterForm />
-      </Reveal>
     </div>
   );
 }

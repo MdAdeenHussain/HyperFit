@@ -10,6 +10,7 @@ const ICONS = {
   card: 'CD',
   upi: 'UP',
   address: 'AD',
+  newsletter: 'NL',
   theme: 'TH',
   delete: 'DL',
   logout: 'LO',

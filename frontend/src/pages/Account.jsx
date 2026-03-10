@@ -13,6 +13,7 @@ import OrdersPanel from '../account/components/OrdersPanel';
 import ProfileCard from '../account/components/ProfileCard';
 import CouponsPanel from '../account/components/CouponsPanel';
 import AddressesPanel from '../account/components/AddressesPanel';
+import NewsletterPreferencesPanel from '../account/components/NewsletterPreferencesPanel';
 import ThemeSelector from '../account/components/ThemeSelector';
 import DeleteAccountPanel from '../account/components/DeleteAccountPanel';
 import PlaceholderPanel from '../account/components/PlaceholderPanel';
@@ -55,6 +56,10 @@ function Account() {
     hintName: ''
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [newsletterSaving, setNewsletterSaving] = useState(false);
+  const [newsletterMessage, setNewsletterMessage] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState('idle');
+  const [newsletterSubscribed, setNewsletterSubscribed] = useState(Boolean(user?.newsletter_subscribed));
 
   const activeTab = searchParams.get('tab') || 'overview';
   const isDark = theme === 'dark';
@@ -93,6 +98,10 @@ function Account() {
   useEffect(() => {
     loadAccountData();
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setNewsletterSubscribed(Boolean(user?.newsletter_subscribed));
+  }, [user?.newsletter_subscribed]);
 
   const couponData = useMemo(() => {
     const discounts = [10, 15, 20, 12, 18, 25, 14, 22];
@@ -194,6 +203,28 @@ function Account() {
     await refreshProfile();
   };
 
+  const updateNewsletterPreference = async (subscribed) => {
+    const previousValue = newsletterSubscribed;
+    setNewsletterSubscribed(subscribed);
+    setNewsletterSaving(true);
+    setNewsletterMessage('');
+    setNewsletterStatus('idle');
+
+    try {
+      const { data } = await api.put('/user/account/newsletter', { subscribed });
+      setNewsletterSubscribed(Boolean(data.subscribed));
+      setNewsletterMessage(data.message || 'Newsletter preference updated');
+      setNewsletterStatus('success');
+      await refreshProfile();
+    } catch (error) {
+      setNewsletterSubscribed(previousValue);
+      setNewsletterMessage(error?.response?.data?.error || 'Unable to update newsletter preference');
+      setNewsletterStatus('error');
+    } finally {
+      setNewsletterSaving(false);
+    }
+  };
+
   const addAddress = async (address) => {
     await api.post('/user/addresses', address);
     await loadAccountData();
@@ -230,6 +261,17 @@ function Account() {
         return <CouponsPanel coupons={couponData} isDark={isDark} />;
       case 'addresses':
         return <AddressesPanel addresses={addresses} onAdd={addAddress} onEdit={editAddress} onRemove={removeAddress} isDark={isDark} />;
+      case 'newsletter':
+        return (
+          <NewsletterPreferencesPanel
+            subscribed={newsletterSubscribed}
+            saving={newsletterSaving}
+            message={newsletterMessage}
+            status={newsletterStatus}
+            onToggle={updateNewsletterPreference}
+            isDark={isDark}
+          />
+        );
       case 'theme':
         return <ThemeSelector theme={theme} setTheme={setTheme} isDark={isDark} />;
       case 'delete-account':

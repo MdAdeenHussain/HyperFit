@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 from extensions import db
 from models.order import Order
 from models.user import Address, User, Wishlist
+from services.newsletter_service import set_newsletter_subscription
 from utils.auth_utils import get_current_user, jwt_required_user
 from utils.security import csrf_protect_json
 
@@ -23,6 +24,7 @@ def account():
             "phone": user.phone,
             "email_verified": user.email_verified,
             "phone_verified": user.phone_verified,
+            "newsletter_subscribed": user.newsletter_subscribed,
         }
     )
 
@@ -43,6 +45,25 @@ def update_account():
 
     db.session.commit()
     return jsonify({"message": "Profile updated"})
+
+
+@user_bp.put("/account/newsletter")
+@jwt_required_user
+@csrf_protect_json
+def update_newsletter_preference():
+    user = get_current_user()
+    data = request.get_json() or {}
+    subscribed = bool(data.get("subscribed"))
+
+    set_newsletter_subscription(user.email, subscribed, user=user)
+    db.session.commit()
+
+    return jsonify(
+        {
+            "message": "Newsletter preference updated",
+            "subscribed": user.newsletter_subscribed,
+        }
+    )
 
 
 @user_bp.get("/addresses")

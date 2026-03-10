@@ -743,6 +743,29 @@
   gap: 0.45rem;
 }
 
+.admin-upload-panel {
+  display: grid;
+  gap: 0.45rem;
+  border: 1px dashed #bfdbfe;
+  border-radius: 14px;
+  padding: 0.85rem;
+  background: #f8fbff;
+}
+
+.admin-field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1e3a8a;
+}
+
+.admin-helper-text {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #475569;
+}
+
 .image-sort-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
@@ -768,6 +791,55 @@
 .sortable-image small {
   color: #1e3a8a;
   font-size: 0.65rem;
+}
+
+.sortable-image-meta {
+  margin-top: 0.35rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.image-remove-btn {
+  border: 0;
+  border-radius: 999px;
+  background: rgba(30, 58, 138, 0.08);
+  color: #1e3a8a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.32rem 0.55rem;
+}
+
+.single-upload-preview {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  gap: 0.7rem;
+  align-items: center;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 0.55rem;
+  background: #eff6ff;
+}
+
+.single-upload-preview > div:first-child {
+  height: 84px;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+  background-color: #dbeafe;
+}
+
+.single-upload-preview-meta {
+  min-width: 0;
+}
+
+.single-upload-preview-meta strong,
+.single-upload-preview-meta small {
+  display: block;
+}
+
+.single-upload-preview-meta small {
+  margin-top: 0.2rem;
+  color: #475569;
 }
 
 .form-btn-row {
@@ -1162,6 +1234,37 @@
   background: var(--admin-surface-2);
   color: var(--admin-text);
   border-color: var(--admin-border);
+}
+
+.admin-app-shell.admin-dark .admin-upload-panel,
+.admin-app-shell.admin-dark .single-upload-preview {
+  background: var(--admin-surface-2);
+  border-color: #334155;
+}
+
+.admin-app-shell.admin-dark .admin-field-label,
+.admin-app-shell.admin-dark .sortable-image small,
+.admin-app-shell.admin-dark .image-remove-btn {
+  color: #bfdbfe;
+}
+
+.admin-app-shell.admin-dark .admin-helper-text,
+.admin-app-shell.admin-dark .single-upload-preview-meta small {
+  color: var(--admin-muted);
+}
+
+.admin-app-shell.admin-dark .sortable-image {
+  border-color: #334155;
+  background: #172554;
+}
+
+.admin-app-shell.admin-dark .sortable-image > div,
+.admin-app-shell.admin-dark .single-upload-preview > div:first-child {
+  background-color: #1e293b;
+}
+
+.admin-app-shell.admin-dark .image-remove-btn {
+  background: rgba(147, 197, 253, 0.14);
 }
 
 .admin-app-shell.admin-dark .topbar-search input,

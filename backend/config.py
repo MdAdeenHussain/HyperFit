@@ -45,6 +45,9 @@ class Config:
     APPLE_CLIENT_ID = os.getenv("APPLE_CLIENT_ID", "")
 
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://127.0.0.1:5173")
+    UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", os.path.join(PROJECT_ROOT, "static", "uploads"))
+    UPLOAD_MAX_FILE_SIZE = int(os.getenv("UPLOAD_MAX_FILE_SIZE", str(5 * 1024 * 1024)))
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(16 * 1024 * 1024)))
 
 
 class DevelopmentConfig(Config):

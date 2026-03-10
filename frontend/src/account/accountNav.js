@@ -27,6 +27,7 @@ export const ACCOUNT_NAV_GROUPS = [
       { key: 'saved-upi', label: 'Saved UPI', icon: 'upi' },
       { key: 'saved-wallets', label: 'Saved Wallets / BNPL', icon: 'wallet' },
       { key: 'addresses', label: 'Addresses', icon: 'address' },
+      { key: 'newsletter', label: 'Newsletter Preferences', icon: 'newsletter' },
       { key: 'theme', label: 'Theme', icon: 'theme' },
       { key: 'delete-account', label: 'Delete Account', icon: 'delete' },
       { key: 'logout', label: 'Logout', icon: 'logout' }

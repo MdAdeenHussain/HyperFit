@@ -1,17 +1,30 @@
 import { useState } from 'react';
+import api from '../services/api';
 
 function NewsletterForm({ compact = false }) {
   const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState('idle');
+  const [message, setMessage] = useState('');
 
   return (
     <form
       className={compact ? 'newsletter-row' : 'newsletter-form'}
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
         if (!email.trim()) return;
-        setSubmitted(true);
-        setEmail('');
+
+        setStatus('loading');
+        setMessage('');
+
+        try {
+          const { data } = await api.post('/marketing/newsletter-subscribe', { email });
+          setStatus('success');
+          setMessage(data.message || 'Subscribed successfully.');
+          setEmail('');
+        } catch (error) {
+          setStatus('error');
+          setMessage(error?.response?.data?.error || 'Unable to subscribe right now.');
+        }
       }}
     >
       <input
@@ -21,8 +34,8 @@ function NewsletterForm({ compact = false }) {
         onChange={(event) => setEmail(event.target.value)}
         aria-label="Email address"
       />
-      <button type="submit">Subscribe</button>
-      {submitted && <small>Thanks for subscribing.</small>}
+      <button type="submit" disabled={status === 'loading'}>{status === 'loading' ? 'Subscribing...' : 'Subscribe'}</button>
+      {message ? <small>{message}</small> : null}
     </form>
   );
 }

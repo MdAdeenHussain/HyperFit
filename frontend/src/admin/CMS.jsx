@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import adminService from '../services/adminService';
 import AdminSkeleton from './components/AdminSkeleton';
+import { createPendingImageAsset, createSavedImageAsset, validateImageFiles } from './uploadHelpers';
 
 function clone(obj) {
   return JSON.parse(JSON.stringify(obj || {}));
@@ -18,6 +19,7 @@ function CMS() {
   const [previewContent, setPreviewContent] = useState(null);
   const [changeSummary, setChangeSummary] = useState(null);
   const [versions, setVersions] = useState([]);
+  const [heroImageAsset, setHeroImageAsset] = useState(null);
 
   const hero = useMemo(() => draftContent.hero || {}, [draftContent]);
   const footer = useMemo(() => draftContent.footer_content || {}, [draftContent]);
@@ -38,6 +40,7 @@ function CMS() {
       setPreviewContent(null);
       setVersions(data.versions || []);
       setChangeSummary(null);
+      setHeroImageAsset(data.page?.draft_content?.hero?.image ? createSavedImageAsset(data.page.draft_content.hero.image) : null);
     } catch (err) {
       setError(err?.response?.data?.error || err?.message || 'Unable to load CMS page');
     } finally {
@@ -66,11 +69,27 @@ function CMS() {
     });
   };
 
+  const prepareDraftContent = async () => {
+    const nextContent = clone(draftContent);
+    if (!heroImageAsset?.pending) {
+      return nextContent;
+    }
+
+    const { data } = await adminService.uploadImages([heroImageAsset.file], 'cms');
+    const uploadedUrl = data.items?.[0] || '';
+    nextContent.hero = nextContent.hero || {};
+    nextContent.hero.image = uploadedUrl;
+    setDraftContent(clone(nextContent));
+    setHeroImageAsset(uploadedUrl ? createSavedImageAsset(uploadedUrl) : null);
+    return nextContent;
+  };
+
   const saveDraft = async () => {
     setSaving(true);
     setError('');
     try {
-      const { data } = await adminService.saveCmsDraft(selectedPage, draftContent);
+      const preparedDraft = await prepareDraftContent();
+      const { data } = await adminService.saveCmsDraft(selectedPage, preparedDraft);
       setChangeSummary(data.change_summary || null);
       const detail = await adminService.getCmsPage(selectedPage);
       setVersions(detail.data.versions || []);
@@ -86,8 +105,9 @@ function CMS() {
     setSaving(true);
     setError('');
     try {
-      const { data } = await adminService.previewCms(selectedPage, draftContent);
-      setPreviewContent(data.preview_content || draftContent);
+      const preparedDraft = await prepareDraftContent();
+      const { data } = await adminService.previewCms(selectedPage, preparedDraft);
+      setPreviewContent(data.preview_content || preparedDraft);
       setChangeSummary(data.change_summary || null);
     } catch (err) {
       setError(err?.response?.data?.error || err?.message || 'Failed to generate preview');
@@ -121,6 +141,23 @@ function CMS() {
     }
   };
 
+  const handleHeroImageUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const { validFiles, errors } = validateImageFiles([file]);
+    if (errors.length) {
+      setError(errors[0]);
+      event.target.value = '';
+      return;
+    }
+
+    const nextAsset = createPendingImageAsset(validFiles[0]);
+    setHeroImageAsset(nextAsset);
+    updateDraftField(['hero', 'image'], nextAsset.url);
+    event.target.value = '';
+  };
+
   return (
     <div className="admin-page">
       <section className="page-head-row">
@@ -149,7 +186,30 @@ function CMS() {
               <input placeholder="Hero title" value={hero.title || ''} onChange={(e) => updateDraftField(['hero', 'title'], e.target.value)} />
               <input placeholder="Hero subtitle" value={hero.subtitle || ''} onChange={(e) => updateDraftField(['hero', 'subtitle'], e.target.value)} />
               <input placeholder="Hero CTA text" value={hero.cta_text || ''} onChange={(e) => updateDraftField(['hero', 'cta_text'], e.target.value)} />
-              <input placeholder="Hero image URL" value={hero.image || ''} onChange={(e) => updateDraftField(['hero', 'image'], e.target.value)} />
+              <div className="admin-upload-panel">
+                <label className="admin-field-label" htmlFor="cms-hero-image-upload">Hero Image</label>
+                <input id="cms-hero-image-upload" type="file" accept=".jpg,.jpeg,.png,.webp" onChange={handleHeroImageUpload} />
+                <p className="admin-helper-text">Choose a hero image from your device. The preview updates before saving.</p>
+                {heroImageAsset ? (
+                  <div className="single-upload-preview">
+                    <div style={{ backgroundImage: `url(${heroImageAsset.url})` }} />
+                    <div className="single-upload-preview-meta">
+                      <strong>{heroImageAsset.pending ? 'Ready to upload' : 'Current hero image'}</strong>
+                      <small>{heroImageAsset.name}</small>
+                    </div>
+                    <button
+                      type="button"
+                      className="ghost danger"
+                      onClick={() => {
+                        setHeroImageAsset(null);
+                        updateDraftField(['hero', 'image'], '');
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : null}
+              </div>
 
               <h4>Footer Content</h4>
               <textarea placeholder="Footer about text" value={footer.about || ''} onChange={(e) => updateDraftField(['footer_content', 'about'], e.target.value)} />

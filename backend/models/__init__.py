@@ -1,4 +1,5 @@
 from .user import User, Address, OTPVerification, Wishlist
+from .newsletter import NewsletterSubscriber
 from .category import Category
 from .product import Product
 from .cart import CartItem
@@ -12,6 +13,7 @@ __all__ = [
     "Address",
     "OTPVerification",
     "Wishlist",
+    "NewsletterSubscriber",
     "Category",
     "Product",
     "CartItem",

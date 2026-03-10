@@ -3,7 +3,7 @@ import shutil
 import subprocess
 
 from flask import Flask, jsonify, request, send_from_directory
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 
 from config import CONFIG_MAP
 from extensions import db, init_extensions, login_manager
@@ -33,6 +33,10 @@ def _frontend_dist_dir() -> str:
 
 def _frontend_index_path() -> str:
     return os.path.join(_frontend_dist_dir(), "index.html")
+
+
+def _uploads_dir() -> str:
+    return os.path.join(_project_root(), "static", "uploads")
 
 
 def _fallback_sqlite_uri() -> str:
@@ -96,6 +100,21 @@ def _serve_spa_index_if_available():
     ), 503
 
 
+def _ensure_runtime_directories(app: Flask):
+    upload_dir = app.config.get("UPLOAD_FOLDER") or _uploads_dir()
+    app.config["UPLOAD_FOLDER"] = upload_dir
+    os.makedirs(upload_dir, exist_ok=True)
+
+
+def _ensure_runtime_schema_updates():
+    inspector = inspect(db.engine)
+    user_columns = {column["name"] for column in inspector.get_columns("users")}
+    if "newsletter_subscribed" not in user_columns:
+        default_true = "TRUE" if db.engine.dialect.name == "postgresql" else "1"
+        db.session.execute(text(f"ALTER TABLE users ADD COLUMN newsletter_subscribed BOOLEAN NOT NULL DEFAULT {default_true}"))
+        db.session.commit()
+
+
 def create_app(env: str | None = None):
     app = Flask(__name__, static_folder=_frontend_dist_dir(), static_url_path="")
     config_name = env or os.getenv("FLASK_ENV", "development")
@@ -104,6 +123,7 @@ def create_app(env: str | None = None):
 
     _configure_database_uri(app)
     _ensure_frontend_build(app)
+    _ensure_runtime_directories(app)
 
     init_extensions(app)
 
@@ -120,6 +140,7 @@ def create_app(env: str | None = None):
     with app.app_context():
         try:
             db.create_all()
+            _ensure_runtime_schema_updates()
             _ensure_default_admin_and_categories()
         except Exception as exc:
             app.logger.error("Database bootstrap failed: %s", exc)
@@ -192,6 +213,10 @@ def register_core_routes(app: Flask):
     @app.get("/")
     def root_spa():
         return _serve_spa_index_if_available()
+
+    @app.get("/uploads/<path:filename>")
+    def uploaded_files(filename):
+        return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
     @app.get("/<path:path>")
     def spa_files(path):

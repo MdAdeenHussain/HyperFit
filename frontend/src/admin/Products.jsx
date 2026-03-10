@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import adminService from '../services/adminService';
 import AdminSkeleton from './components/AdminSkeleton';
+import { createPendingImageAsset, createSavedImageAsset, toSavedImageAssets, validateImageFiles } from './uploadHelpers';
 
 const EMPTY_PRODUCT = {
   name: '',
@@ -11,15 +12,13 @@ const EMPTY_PRODUCT = {
   stock: '',
   sizes: 'S,M,L,XL',
   colors: 'Black,Blue',
-  sku: '',
-  image_url: ''
+  sku: ''
 };
 
 const EMPTY_CATEGORY = {
   name: '',
   parent_id: '',
-  gender: 'men',
-  image_url: ''
+  gender: 'men'
 };
 
 function Products() {
@@ -34,6 +33,7 @@ function Products() {
 
   const [categoryForm, setCategoryForm] = useState(EMPTY_CATEGORY);
   const [categoryEditId, setCategoryEditId] = useState(null);
+  const [categoryImage, setCategoryImage] = useState(null);
 
   const topCategories = useMemo(() => categories.filter((cat) => !cat.parent_id), [categories]);
 
@@ -61,54 +61,89 @@ function Products() {
     setImageList([]);
   };
 
+  const resetCategoryForm = () => {
+    setCategoryEditId(null);
+    setCategoryForm(EMPTY_CATEGORY);
+    setCategoryImage(null);
+  };
+
+  const uploadPendingImages = async (assets, kind) => {
+    const pendingFiles = assets.filter((item) => item.pending).map((item) => item.file);
+    if (!pendingFiles.length) {
+      return assets.map((item) => item.url).filter(Boolean);
+    }
+
+    const { data } = await adminService.uploadImages(pendingFiles, kind);
+    const uploadedUrls = data.items || [];
+    let uploadIndex = 0;
+
+    return assets.map((item) => {
+      if (!item.pending) return item.url;
+      const nextUrl = uploadedUrls[uploadIndex];
+      uploadIndex += 1;
+      return nextUrl;
+    }).filter(Boolean);
+  };
+
   const submitProduct = async (event) => {
     event.preventDefault();
 
-    const payload = {
-      name: form.name,
-      description: form.description,
-      category_id: Number(form.category_id),
-      price: Number(form.price),
-      discount: Number(form.discount || 0),
-      stock: Number(form.stock),
-      sku: form.sku,
-      images: imageList,
-      sizes: form.sizes.split(',').map((item) => item.trim()).filter(Boolean),
-      colors: form.colors.split(',').map((item) => item.trim()).filter(Boolean)
-    };
+    setError('');
 
-    if (editId) {
-      await adminService.updateProduct(editId, payload);
-    } else {
-      await adminService.createProduct(payload);
+    try {
+      const payload = {
+        name: form.name,
+        description: form.description,
+        category_id: Number(form.category_id),
+        price: Number(form.price),
+        discount: Number(form.discount || 0),
+        stock: Number(form.stock),
+        sku: form.sku,
+        images: await uploadPendingImages(imageList, 'product'),
+        sizes: form.sizes.split(',').map((item) => item.trim()).filter(Boolean),
+        colors: form.colors.split(',').map((item) => item.trim()).filter(Boolean)
+      };
+
+      if (editId) {
+        await adminService.updateProduct(editId, payload);
+      } else {
+        await adminService.createProduct(payload);
+      }
+
+      resetForm();
+      load();
+    } catch (err) {
+      setError(err?.response?.data?.error || err?.message || 'Unable to save product');
     }
-
-    resetForm();
-    load();
   };
 
   const submitCategory = async (event) => {
     event.preventDefault();
-    const payload = {
-      ...categoryForm,
-      parent_id: categoryForm.parent_id ? Number(categoryForm.parent_id) : null
-    };
 
-    if (categoryEditId) {
-      await adminService.updateCategory(categoryEditId, payload);
-    } else {
-      await adminService.createCategory(payload);
+    setError('');
+
+    try {
+      const uploadedCategoryImage = categoryImage?.pending
+        ? (await adminService.uploadImages([categoryImage.file], 'category')).data.items?.[0] || ''
+        : categoryImage?.url || '';
+
+      const payload = {
+        ...categoryForm,
+        parent_id: categoryForm.parent_id ? Number(categoryForm.parent_id) : null,
+        image_url: uploadedCategoryImage
+      };
+
+      if (categoryEditId) {
+        await adminService.updateCategory(categoryEditId, payload);
+      } else {
+        await adminService.createCategory(payload);
+      }
+
+      resetCategoryForm();
+      load();
+    } catch (err) {
+      setError(err?.response?.data?.error || err?.message || 'Unable to save category');
     }
-
-    setCategoryEditId(null);
-    setCategoryForm(EMPTY_CATEGORY);
-    load();
-  };
-
-  const pushImage = () => {
-    if (!form.image_url.trim()) return;
-    setImageList((prev) => [...prev, form.image_url.trim()]);
-    setForm((prev) => ({ ...prev, image_url: '' }));
   };
 
   const onDragStart = (index) => (event) => {
@@ -132,18 +167,28 @@ function Products() {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
 
-    const encoded = await Promise.all(
-      files.map(
-        (file) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          })
-      )
-    );
-    setImageList((prev) => [...prev, ...encoded.filter(Boolean)]);
+    const { validFiles, errors } = validateImageFiles(files);
+    if (errors.length) {
+      setError(errors[0]);
+    }
+    if (validFiles.length) {
+      setImageList((prev) => [...prev, ...validFiles.map(createPendingImageAsset)]);
+    }
+    event.target.value = '';
+  };
+
+  const handleCategoryImageUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const { validFiles, errors } = validateImageFiles([file]);
+    if (errors.length) {
+      setError(errors[0]);
+      event.target.value = '';
+      return;
+    }
+
+    setCategoryImage(createPendingImageAsset(validFiles[0]));
     event.target.value = '';
   };
 
@@ -158,10 +203,14 @@ function Products() {
       stock: item.stock,
       sizes: (item.sizes || []).join(','),
       colors: (item.colors || []).join(','),
-      sku: item.sku,
-      image_url: ''
+      sku: item.sku
     });
-    setImageList(item.images || []);
+    setImageList(toSavedImageAssets(item.images || []));
+    setError('');
+  };
+
+  const removeImage = (imageId) => {
+    setImageList((prev) => prev.filter((item) => item.id !== imageId));
   };
 
   if (loading) return <AdminSkeleton rows={10} />;
@@ -198,24 +247,27 @@ function Products() {
             <input placeholder="Sizes (comma separated)" value={form.sizes} onChange={(e) => setForm((prev) => ({ ...prev, sizes: e.target.value }))} />
             <input placeholder="Colors (comma separated)" value={form.colors} onChange={(e) => setForm((prev) => ({ ...prev, colors: e.target.value }))} />
 
-            <div className="inline-action-row">
-              <input placeholder="Image URL" value={form.image_url} onChange={(e) => setForm((prev) => ({ ...prev, image_url: e.target.value }))} />
-              <button type="button" className="ghost" onClick={pushImage}>Add image</button>
+            <div className="admin-upload-panel">
+              <label className="admin-field-label" htmlFor="product-image-upload">Product Images</label>
+              <input id="product-image-upload" type="file" accept=".jpg,.jpeg,.png,.webp" multiple onChange={handleImageUpload} />
+              <p className="admin-helper-text">Upload JPG, PNG, or WEBP images from your device. Max 5 MB per image.</p>
             </div>
-            <input type="file" accept="image/*" multiple onChange={handleImageUpload} />
 
             <div className="image-sort-grid">
               {imageList.map((image, index) => (
                 <div
-                  key={`${image}-${index}`}
+                  key={image.id}
                   className="sortable-image"
                   draggable
                   onDragStart={onDragStart(index)}
                   onDragOver={(event) => event.preventDefault()}
                   onDrop={onDrop(index)}
                 >
-                  <div style={{ backgroundImage: `url(${image})` }} />
-                  <small>Drag to reorder</small>
+                  <div style={{ backgroundImage: `url(${image.url})` }} />
+                  <div className="sortable-image-meta">
+                    <small>{image.pending ? 'Ready to upload' : 'Saved image'}</small>
+                    <button type="button" className="image-remove-btn" onClick={() => removeImage(image.id)}>Remove</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -239,10 +291,24 @@ function Products() {
               <option value="">No Parent (Root Category)</option>
               {topCategories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
             </select>
-            <input placeholder="Category image URL" value={categoryForm.image_url} onChange={(e) => setCategoryForm((prev) => ({ ...prev, image_url: e.target.value }))} />
+            <div className="admin-upload-panel">
+              <label className="admin-field-label" htmlFor="category-image-upload">Category Image</label>
+              <input id="category-image-upload" type="file" accept=".jpg,.jpeg,.png,.webp" onChange={handleCategoryImageUpload} />
+              <p className="admin-helper-text">Use a category thumbnail for navigation cards and previews.</p>
+              {categoryImage ? (
+                <div className="single-upload-preview">
+                  <div style={{ backgroundImage: `url(${categoryImage.url})` }} />
+                  <div className="single-upload-preview-meta">
+                    <strong>{categoryImage.pending ? 'Ready to upload' : 'Current image'}</strong>
+                    <small>{categoryImage.name}</small>
+                  </div>
+                  <button type="button" className="ghost danger" onClick={() => setCategoryImage(null)}>Remove</button>
+                </div>
+              ) : null}
+            </div>
             <div className="form-btn-row">
               <button type="submit" className="admin-btn">{categoryEditId ? 'Update Category' : 'Add Category'}</button>
-              {categoryEditId ? <button type="button" className="ghost" onClick={() => { setCategoryEditId(null); setCategoryForm(EMPTY_CATEGORY); }}>Cancel</button> : null}
+              {categoryEditId ? <button type="button" className="ghost" onClick={resetCategoryForm}>Cancel</button> : null}
             </div>
           </form>
 
@@ -266,9 +332,9 @@ function Products() {
                             setCategoryForm({
                               name: cat.name,
                               parent_id: cat.parent_id || '',
-                              gender: cat.gender,
-                              image_url: cat.image_url || ''
+                              gender: cat.gender
                             });
+                            setCategoryImage(cat.image_url ? createSavedImageAsset(cat.image_url) : null);
                           }}
                         >Edit</button>
                         <button className="ghost danger" onClick={() => adminService.deleteCategory(cat.id).then(load)}>Delete</button>

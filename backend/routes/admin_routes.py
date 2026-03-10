@@ -1,19 +1,23 @@
 import csv
 import json
+import os
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
 from io import BytesIO, StringIO
+from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request, send_file
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from sqlalchemy import and_, desc, func, or_
+from werkzeug.utils import secure_filename
 
 from extensions import cache, db
 from models import Address
 from models.admin import AdminActivity, CMSPage, CMSVersion, EmailCampaign, SiteSetting
 from models.category import Category
+from models.newsletter import NewsletterSubscriber
 from models.coupon import Coupon
 from models.order import Order, OrderItem
 from models.product import Product
@@ -26,6 +30,9 @@ from utils.security import csrf_protect_json
 
 
 admin_bp = Blueprint("admin_routes", __name__, url_prefix="/api/admin")
+
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+ALLOWED_IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
 DEFAULT_SITE_SETTINGS = {
@@ -96,6 +103,26 @@ def _to_float(value) -> float:
 def _parse_date(value: str | None, end_of_day: bool = False):
     if not value:
         return None
+
+
+def _validate_uploaded_image(file_storage):
+    filename = secure_filename(file_storage.filename or "")
+    extension = os.path.splitext(filename)[1].lower()
+    if not filename or extension not in ALLOWED_IMAGE_EXTENSIONS:
+        return "Only JPG, JPEG, PNG, and WEBP files are allowed"
+
+    if (file_storage.mimetype or "").lower() not in ALLOWED_IMAGE_MIME_TYPES:
+        return "Unsupported image format"
+
+    current_position = file_storage.stream.tell()
+    file_storage.stream.seek(0, os.SEEK_END)
+    size = file_storage.stream.tell()
+    file_storage.stream.seek(current_position)
+
+    if size > current_app.config.get("UPLOAD_MAX_FILE_SIZE", 5 * 1024 * 1024):
+        return "Each image must be 5 MB or smaller"
+
+    return None
 
     value = value.strip()
     fmts = ["%Y-%m-%d", "%Y-%m-%dT%H:%M", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]
@@ -865,6 +892,35 @@ def admin_products():
     return jsonify({"items": [_serialize_product(row) for row in rows]})
 
 
+@admin_bp.post("/uploads/images")
+@admin_required
+@csrf_protect_json
+def upload_images():
+    files = [file for file in request.files.getlist("files") if file and file.filename]
+    if not files:
+        return jsonify({"error": "Please select at least one image"}), 400
+
+    kind = slugify((request.form.get("kind") or "image").strip()) or "image"
+    uploaded = []
+    upload_dir = current_app.config["UPLOAD_FOLDER"]
+    os.makedirs(upload_dir, exist_ok=True)
+
+    for file_storage in files:
+        error = _validate_uploaded_image(file_storage)
+        if error:
+            return jsonify({"error": error}), 400
+
+    for file_storage in files:
+        extension = os.path.splitext(secure_filename(file_storage.filename))[1].lower()
+        filename = f"{kind}-{uuid4().hex}{extension}"
+        path = os.path.join(upload_dir, filename)
+        file_storage.stream.seek(0)
+        file_storage.save(path)
+        uploaded.append(f"/uploads/{filename}")
+
+    return jsonify({"items": uploaded})
+
+
 @admin_bp.post("/products")
 @admin_required
 @csrf_protect_json
@@ -1337,15 +1393,18 @@ def send_campaign():
     content = (data.get("content") or "Latest launches are now live.").strip()
     campaign_type = (data.get("campaign_type") or "newsletter").strip()
 
-    recipients = User.query.filter_by(is_active=True).all()
+    if campaign_type == "newsletter":
+        recipient_emails = [row.email for row in NewsletterSubscriber.query.filter_by(subscribed=True).all()]
+    else:
+        recipient_emails = [row.email for row in User.query.filter_by(is_active=True).all()]
 
     sent_count = 0
     if current_app.config.get("SENDGRID_API_KEY"):
-        for recipient in recipients:
-            SendGridService.send_email(recipient.email, subject, newsletter_template(title, content))
+        for email in recipient_emails:
+            SendGridService.send_email(email, subject, newsletter_template(title, content))
             sent_count += 1
     else:
-        sent_count = len(recipients)
+        sent_count = len(recipient_emails)
 
     base = max(1, sent_count)
     campaign = EmailCampaign(
