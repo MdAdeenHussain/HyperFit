@@ -50,6 +50,8 @@ def list_products():
 
     search = request.args.get("search")
     category = request.args.get("category")
+    sale = request.args.get("sale")
+    new_arrival = request.args.get("new_arrival")
     color = request.args.get("color")
     size = request.args.get("size")
     min_price = safe_float(request.args.get("min_price"), 0)
@@ -58,12 +60,33 @@ def list_products():
     sort = request.args.get("sort", "new")
 
     query = Product.query.filter_by(is_active=True)
+    joined_category = False
 
     if search:
         search_like = f"%{search.lower()}%"
-        query = query.filter(or_(Product.name.ilike(search_like), Product.description.ilike(search_like)))
+        query = query.join(Category)
+        joined_category = True
+        query = query.filter(
+            or_(
+                Product.name.ilike(search_like),
+                Product.description.ilike(search_like),
+                Category.name.ilike(search_like),
+                Category.slug.ilike(search_like),
+                Product.tags.cast(db.String).ilike(search_like),
+            )
+        )
     if category:
-        query = query.join(Category).filter(Category.slug == category)
+        if not joined_category:
+            query = query.join(Category)
+            joined_category = True
+        if category in {"men", "women"}:
+            query = query.filter(Category.gender == category)
+        else:
+            query = query.filter(Category.slug == category)
+    if sale and sale.lower() == "true":
+        query = query.filter(Product.is_on_sale.is_(True))
+    if new_arrival and new_arrival.lower() == "true":
+        query = query.filter(Product.is_new_arrival.is_(True))
     if color:
         query = query.filter(Product.colors.contains([color]))
     if size:

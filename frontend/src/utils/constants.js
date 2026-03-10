@@ -3,8 +3,10 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0
 export const NAV_LINKS = [
   { label: 'Men', path: '/shop?category=men' },
   { label: 'Women', path: '/shop?category=women' },
-  { label: 'New Arrivals', path: '/shop?sort=new' },
-  { label: 'On Sale', path: '/shop?sale=true' }
+  { label: 'Compression', path: '/shop?category=compression' },
+  { label: 'New Arrivals 🔥', path: '/shop?new_arrival=true&sort=new' },
+  { label: 'Sale', path: '/shop?sale=true' },
+  { label: 'Accessories', path: '/shop?search=accessories' }
 ];
 
 export const MEN_CATEGORIES = ['T-Shirts', 'Compression', 'Pants', 'Shorts'];

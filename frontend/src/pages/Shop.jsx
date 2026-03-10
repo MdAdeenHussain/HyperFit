@@ -15,6 +15,8 @@ const FILTER_DEFAULTS = {
   color: '',
   category: '',
   rating: '',
+  sale: '',
+  new_arrival: '',
   sort: 'new'
 };
 
@@ -31,7 +33,14 @@ function Shop() {
   }, []);
 
   useEffect(() => {
-    setFilters((prev) => ({ ...prev, category: query.get('category') || '', sort: query.get('sort') || prev.sort }));
+    setFilters((prev) => ({
+      ...prev,
+      search: query.get('search') || '',
+      category: query.get('category') || '',
+      sale: query.get('sale') || '',
+      new_arrival: query.get('new_arrival') || '',
+      sort: query.get('sort') || FILTER_DEFAULTS.sort
+    }));
   }, [query]);
 
   const params = useMemo(() => {
@@ -55,7 +64,7 @@ function Shop() {
 
   useEffect(() => {
     load();
-  }, [params.category, params.sort]);
+  }, [params.category, params.sort, params.search, params.sale, params.new_arrival]);
 
   const filterFields = (
     <div className="shop-filters">
